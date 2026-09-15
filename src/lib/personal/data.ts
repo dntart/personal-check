@@ -1,7 +1,41 @@
 import "server-only";
 import { createClient } from "@/lib/supabase/server";
-import { calcularEfecto } from "./reglas";
+import { calcularEfecto, UMBRAL_SALDO_ALTO } from "./reglas";
 import { agruparParaNomina, type AreaNomina } from "./nomina";
+
+/**
+ * Alertas (spec sección 5, campanita del dashboard): saldo negativo, o
+ * saldo ≥ umbral configurable (default 15 días, evita que un crédito
+ * gigante pase desapercibido). Query liviana — la usa el nav en cada
+ * página, no solo el dashboard.
+ */
+export async function obtenerAlertas(): Promise<number> {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("movimientos")
+    .select("operario_id, cantidad, tipos_movimiento(impacto, unidad)")
+    .is("deleted_at", null);
+
+  const saldoPorOperario = new Map<string, number>();
+  for (const m of data ?? []) {
+    const tipo = m.tipos_movimiento as unknown as {
+      impacto: "suma" | "resta" | "neutro";
+      unidad: "dias" | "minutos";
+    } | null;
+    if (!tipo || tipo.unidad !== "dias") continue;
+    saldoPorOperario.set(
+      m.operario_id,
+      (saldoPorOperario.get(m.operario_id) ?? 0) +
+        calcularEfecto(tipo.impacto, m.cantidad),
+    );
+  }
+
+  let alertas = 0;
+  for (const saldo of saldoPorOperario.values()) {
+    if (saldo < 0 || saldo >= UMBRAL_SALDO_ALTO) alertas++;
+  }
+  return alertas;
+}
 
 /**
  * Trae todo lo necesario para armar la Nómina y lo agrupa. RLS ya filtra
@@ -145,6 +179,30 @@ export async function obtenerEstadisticasDashboard() {
   };
 }
 
+export async function obtenerUltimasNovedades(limite = 8) {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("movimientos")
+    .select(
+      "id, fecha, observaciones, operarios(nombre), tipos_movimiento(nombre)",
+    )
+    .is("deleted_at", null)
+    .order("created_at", { ascending: false })
+    .limit(limite);
+
+  return (data ?? []).map((m) => {
+    const operario = m.operarios as unknown as { nombre: string } | null;
+    const tipo = m.tipos_movimiento as unknown as { nombre: string } | null;
+    return {
+      id: m.id,
+      fecha: m.fecha,
+      observaciones: m.observaciones,
+      operarioNombre: operario?.nombre ?? "—",
+      tipoNombre: tipo?.nombre ?? "—",
+    };
+  });
+}
+
 export async function obtenerAreas() {
   const supabase = await createClient();
   const { data } = await supabase
@@ -153,6 +211,35 @@ export async function obtenerAreas() {
     .is("deleted_at", null)
     .order("nombre");
   return data ?? [];
+}
+
+/**
+ * Áreas que la sesión actual puede usar para asignar personal. Un Admin de
+ * organización ve todas; un Supervisor solo las que le asignaron
+ * (admin_areas) — la tabla `areas` en sí no está particionada por RLS
+ * (cualquier admin de la org puede listarlas), así que este recorte es de
+ * la app, no de la base. RLS igual bloquea el INSERT/UPDATE si se intenta
+ * usar un área fuera de alcance — esto es solo para no ofrecerla en la UI.
+ */
+export async function obtenerAreasPermitidas(sesion: {
+  tipo: string;
+  rol?: "admin" | "supervisor";
+  id: string;
+}) {
+  if (sesion.tipo !== "admin" || sesion.rol === "admin") {
+    return obtenerAreas();
+  }
+
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("admin_areas")
+    .select("areas(id, nombre)")
+    .eq("admin_id", sesion.id);
+
+  return (data ?? [])
+    .map((r) => r.areas as unknown as { id: string; nombre: string } | null)
+    .filter((a): a is { id: string; nombre: string } => a !== null)
+    .sort((a, b) => a.nombre.localeCompare(b.nombre));
 }
 
 export async function obtenerFichaPersonal(operarioId: string) {

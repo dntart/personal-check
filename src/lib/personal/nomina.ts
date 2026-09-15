@@ -1,4 +1,9 @@
-import { calcularTurno, esAdministracion, type Turno } from "./reglas";
+import {
+  calcularTurno,
+  esAdministracion,
+  UMBRAL_SALDO_ALTO,
+  type Turno,
+} from "./reglas";
 
 export type DiaCelda = {
   diaSemana: number;
@@ -144,4 +149,39 @@ export function agruparParaNomina(
       sinHorario,
     };
   });
+}
+
+export type FiltroNomina = "negativo" | "positivo" | "alertas" | undefined;
+
+/**
+ * Filtra la nómina ya agrupada para las tarjetas del dashboard que "navegan
+ * ya filtradas" (spec sección 6.2). Filtra las hojas (personas), conserva
+ * la estructura de área/turno y descarta bloques que queden vacíos.
+ */
+export function filtrarNomina(
+  areas: AreaNomina[],
+  filtro: FiltroNomina,
+): AreaNomina[] {
+  if (!filtro) return areas;
+
+  const cumple = (p: PersonaNomina) => {
+    if (filtro === "negativo") return p.saldo < 0;
+    if (filtro === "positivo") return p.saldo > 0;
+    return p.saldo < 0 || p.saldo >= UMBRAL_SALDO_ALTO;
+  };
+
+  return areas
+    .map((area) => ({
+      ...area,
+      bloques: area.bloques.map((b) => ({
+        ...b,
+        personas: b.personas.filter(cumple),
+      })),
+      sinHorario: area.sinHorario.filter(cumple),
+    }))
+    .filter(
+      (area) =>
+        area.bloques.some((b) => b.personas.length > 0) ||
+        area.sinHorario.length > 0,
+    );
 }

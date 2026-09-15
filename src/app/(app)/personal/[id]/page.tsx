@@ -57,6 +57,12 @@ export default async function FichaPersonalPage({
           Cargar novedad
         </Link>
         <Link
+          href={`/personal/${id}/editar`}
+          className="rounded-sm border border-borde px-4 py-2 text-sm hover:bg-papel"
+        >
+          Editar datos
+        </Link>
+        <Link
           href={`/personal/${id}/horario`}
           className="rounded-sm border border-borde px-4 py-2 text-sm hover:bg-papel"
         >

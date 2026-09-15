@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { obtenerSesion } from "@/lib/supabase/sesion";
-import { obtenerAreas } from "@/lib/personal/data";
+import { obtenerAreasPermitidas } from "@/lib/personal/data";
 import { NuevaPersonaForm } from "./NuevaPersonaForm";
 
 export default async function NuevaPersonaPage() {
@@ -9,7 +9,7 @@ export default async function NuevaPersonaPage() {
   if (!sesion) redirect("/login");
   if (sesion.tipo !== "admin") redirect("/");
 
-  const areas = await obtenerAreas();
+  const areas = await obtenerAreasPermitidas(sesion);
 
   return (
     <div className="mx-auto flex w-full max-w-md flex-1 flex-col p-6">
