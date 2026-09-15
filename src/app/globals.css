@@ -1,26 +1,54 @@
 @import "tailwindcss";
 
+/*
+ * Paleta "libro de registro de taller" — spec sección 7.
+ * Deliberadamente no es el cream+terracota genérico de IA.
+ */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+  --color-papel: #f1efe7;
+  --color-superficie: #ffffff;
+  --color-texto: #211f1a;
+  --color-borde: #d8d3c4;
+  --color-acento: #1f4d4c;
+  --color-positivo: #3f6b34;
+  --color-negativo: #a8462b;
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  /* Tinte por turno en la Nómina (frío = mañana, cálido = tarde) */
+  --color-turno-manana: #edf5f3;
+  --color-turno-tarde: #fbf3e6;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --color-papel: #1b1a17;
+    --color-superficie: #242320;
+    --color-texto: #ece8dd;
+    --color-borde: #3a382f;
+    --color-acento: #5fa6a0;
+    --color-positivo: #8fc47c;
+    --color-negativo: #e28a67;
+
+    --color-turno-manana: #1e2825;
+    --color-turno-tarde: #2b2419;
   }
 }
 
+@theme inline {
+  --color-papel: var(--color-papel);
+  --color-superficie: var(--color-superficie);
+  --color-texto: var(--color-texto);
+  --color-borde: var(--color-borde);
+  --color-acento: var(--color-acento);
+  --color-positivo: var(--color-positivo);
+  --color-negativo: var(--color-negativo);
+  --color-turno-manana: var(--color-turno-manana);
+  --color-turno-tarde: var(--color-turno-tarde);
+  --font-sans: var(--font-plex-sans);
+  --font-mono: var(--font-plex-mono);
+  --radius-sm: 6px;
+}
+
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--color-papel);
+  color: var(--color-texto);
 }
