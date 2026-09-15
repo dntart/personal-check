@@ -37,6 +37,9 @@ yarn-error.log*
 # vercel
 .vercel
 
+# caché temporal del CLI de Supabase (queda al correr `npm run types:generate`)
+/supabase/.temp
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts

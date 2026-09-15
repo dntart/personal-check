@@ -2,6 +2,16 @@ import "server-only";
 import { createClient } from "@/lib/supabase/server";
 import type { SesionPersonalCheck } from "@/types/auth";
 
+const ROLES_VALIDOS = ["admin", "supervisor"] as const;
+
+// El generador de tipos de Supabase no lee check constraints de Postgres,
+// así que `admins.rol` llega tipado como `string` genérico aunque la DB
+// garantice solo estos dos valores. Angostamos acá, en el borde, en vez de
+// confiar ciegamente en el dato.
+function esRolValido(valor: string): valor is "admin" | "supervisor" {
+  return (ROLES_VALIDOS as readonly string[]).includes(valor);
+}
+
 /**
  * Resuelve quién es el usuario autenticado dentro de PersonalCheck.
  *
@@ -30,6 +40,12 @@ export async function obtenerSesion(): Promise<SesionPersonalCheck | null> {
     .maybeSingle();
 
   if (admin) {
+    if (!esRolValido(admin.rol)) {
+      console.error(
+        `admins.rol con valor inesperado "${admin.rol}" para admin ${admin.id} — tratando como sin sesión.`,
+      );
+      return null;
+    }
     return {
       tipo: "admin",
       id: admin.id,

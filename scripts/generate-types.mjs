@@ -6,10 +6,17 @@
 // Uso:
 //   npm run types:generate
 //
-// Requiere SUPABASE_DB_URL en el entorno (ver .env.example): la connection
-// string de Postgres del proyecto Supabase COMPARTIDO del portfolio
-// (Project Settings > Database > Connection string > "URI"). No hace falta
-// `supabase login` ni linkear el repo — el CLI se conecta directo a la DB.
+// Requiere en el entorno (ver .env.example):
+//   SUPABASE_ACCESS_TOKEN  — token personal de tu cuenta Supabase (uno solo
+//                            te sirve para todos tus SaaS, se genera en
+//                            https://supabase.com/dashboard/account/tokens)
+//   SUPABASE_PROJECT_ID    — el project ref del proyecto compartido
+//                            (se ve en la URL del dashboard:
+//                            supabase.com/dashboard/project/<ESTO>)
+//
+// Deliberadamente NO usa `--db-url` (esa variante del CLI necesita Docker
+// Desktop corriendo localmente para levantar un contenedor interno) — este
+// método pega directo contra la Management API de Supabase.
 
 import { spawnSync } from "node:child_process";
 import { writeFileSync, mkdirSync } from "node:fs";
@@ -22,18 +29,22 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 try {
   process.loadEnvFile(join(__dirname, "..", ".env.local"));
 } catch {
-  // sin .env.local todavía — seguimos, el chequeo de SUPABASE_DB_URL de
-  // abajo va a explicar qué falta.
+  // sin .env.local todavía — seguimos, los chequeos de abajo explican qué falta.
 }
 
-const dbUrl = process.env.SUPABASE_DB_URL;
+const { SUPABASE_ACCESS_TOKEN, SUPABASE_PROJECT_ID } = process.env;
 
-if (!dbUrl) {
+const faltantes = [
+  !SUPABASE_ACCESS_TOKEN && "SUPABASE_ACCESS_TOKEN",
+  !SUPABASE_PROJECT_ID && "SUPABASE_PROJECT_ID",
+].filter(Boolean);
+
+if (faltantes.length > 0) {
   console.error(
-    "Falta SUPABASE_DB_URL. Copiá .env.example a .env.local y completá esa " +
-      "variable con la connection string de Postgres del proyecto Supabase " +
-      "compartido del portfolio (Project Settings > Database > Connection " +
-      'string > "URI"), después volvé a correr `npm run types:generate`.',
+    `Falta ${faltantes.join(" y ")} en .env.local (ver .env.example).\n\n` +
+      "SUPABASE_ACCESS_TOKEN: generalo en https://supabase.com/dashboard/account/tokens\n" +
+      "SUPABASE_PROJECT_ID: el project ref del proyecto compartido (se ve en la URL\n" +
+      "del dashboard: supabase.com/dashboard/project/<ESTO>)",
   );
   process.exit(1);
 }
@@ -49,12 +60,16 @@ const resultado = spawnSync(
     "gen",
     "types",
     "typescript",
-    "--db-url",
-    dbUrl,
+    "--project-id",
+    SUPABASE_PROJECT_ID,
     "--schema",
     "personalcheck",
   ],
-  { encoding: "utf-8", shell: true },
+  {
+    encoding: "utf-8",
+    shell: true,
+    env: { ...process.env, SUPABASE_ACCESS_TOKEN },
+  },
 );
 
 if (resultado.status !== 0) {

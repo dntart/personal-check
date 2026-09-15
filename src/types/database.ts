@@ -1,9 +1,6 @@
-// Placeholder escrito a mano — reemplazar corriendo `npm run types:generate`
-// contra el proyecto Supabase real (necesita SUPABASE_DB_URL en .env.local,
-// ver .env.example). Mientras tanto, esta forma refleja fielmente las 4
-// migraciones en docs/migrations/ para que el resto del código pueda tipar
-// contra ella sin esperar a tener la DB levantada.
-
+// Generado automáticamente — NO editar a mano.
+// Fuente: schema `personalcheck` del proyecto Supabase compartido del portfolio.
+// Regenerar con: npm run types:generate
 export type Json =
   | string
   | number
@@ -13,100 +10,13 @@ export type Json =
   | Json[];
 
 export type Database = {
+  // Allows to automatically instantiate createClient with right options
+  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
+  __InternalSupabase: {
+    PostgrestVersion: "14.5";
+  };
   personalcheck: {
     Tables: {
-      organizaciones: {
-        Row: {
-          id: string;
-          nombre: string;
-          activo: boolean;
-          created_at: string;
-          updated_at: string;
-          deleted_at: string | null;
-        };
-        Insert: {
-          id?: string;
-          nombre: string;
-          activo?: boolean;
-          created_at?: string;
-          updated_at?: string;
-          deleted_at?: string | null;
-        };
-        Update: {
-          id?: string;
-          nombre?: string;
-          activo?: boolean;
-          created_at?: string;
-          updated_at?: string;
-          deleted_at?: string | null;
-        };
-        Relationships: [];
-      };
-      admins: {
-        Row: {
-          id: string;
-          organizacion_id: string;
-          nombre: string;
-          email: string;
-          rol: "admin" | "supervisor";
-          created_at: string;
-          updated_at: string;
-          deleted_at: string | null;
-        };
-        Insert: {
-          id: string;
-          organizacion_id: string;
-          nombre: string;
-          email: string;
-          rol?: "admin" | "supervisor";
-          created_at?: string;
-          updated_at?: string;
-          deleted_at?: string | null;
-        };
-        Update: {
-          id?: string;
-          organizacion_id?: string;
-          nombre?: string;
-          email?: string;
-          rol?: "admin" | "supervisor";
-          created_at?: string;
-          updated_at?: string;
-          deleted_at?: string | null;
-        };
-        Relationships: [
-          {
-            foreignKeyName: "admins_organizacion_id_fkey";
-            columns: ["organizacion_id"];
-            isOneToOne: false;
-            referencedRelation: "organizaciones";
-            referencedColumns: ["id"];
-          },
-        ];
-      };
-      super_admins: {
-        Row: {
-          id: string;
-          nombre: string;
-          email: string;
-          created_at: string;
-          updated_at: string;
-        };
-        Insert: {
-          id: string;
-          nombre: string;
-          email: string;
-          created_at?: string;
-          updated_at?: string;
-        };
-        Update: {
-          id?: string;
-          nombre?: string;
-          email?: string;
-          created_at?: string;
-          updated_at?: string;
-        };
-        Relationships: [];
-      };
       admin_areas: {
         Row: {
           admin_id: string;
@@ -140,30 +50,71 @@ export type Database = {
           },
         ];
       };
-      areas: {
+      admins: {
         Row: {
-          id: string;
-          organizacion_id: string;
-          nombre: string;
           created_at: string;
-          updated_at: string;
           deleted_at: string | null;
+          email: string;
+          id: string;
+          nombre: string;
+          organizacion_id: string;
+          rol: string;
+          updated_at: string;
         };
         Insert: {
-          id?: string;
-          organizacion_id: string;
-          nombre: string;
           created_at?: string;
-          updated_at?: string;
           deleted_at?: string | null;
+          email: string;
+          id: string;
+          nombre: string;
+          organizacion_id: string;
+          rol?: string;
+          updated_at?: string;
         };
         Update: {
-          id?: string;
-          organizacion_id?: string;
-          nombre?: string;
           created_at?: string;
-          updated_at?: string;
           deleted_at?: string | null;
+          email?: string;
+          id?: string;
+          nombre?: string;
+          organizacion_id?: string;
+          rol?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "admins_organizacion_id_fkey";
+            columns: ["organizacion_id"];
+            isOneToOne: false;
+            referencedRelation: "organizaciones";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      areas: {
+        Row: {
+          created_at: string;
+          deleted_at: string | null;
+          id: string;
+          nombre: string;
+          organizacion_id: string;
+          updated_at: string;
+        };
+        Insert: {
+          created_at?: string;
+          deleted_at?: string | null;
+          id?: string;
+          nombre: string;
+          organizacion_id: string;
+          updated_at?: string;
+        };
+        Update: {
+          created_at?: string;
+          deleted_at?: string | null;
+          id?: string;
+          nombre?: string;
+          organizacion_id?: string;
+          updated_at?: string;
         };
         Relationships: [
           {
@@ -175,268 +126,56 @@ export type Database = {
           },
         ];
       };
-      operarios: {
-        Row: {
-          id: string;
-          organizacion_id: string;
-          area_id: string;
-          nombre: string;
-          activo: boolean;
-          created_at: string;
-          updated_at: string;
-          deleted_at: string | null;
-        };
-        Insert: {
-          id?: string;
-          organizacion_id: string;
-          area_id: string;
-          nombre: string;
-          activo?: boolean;
-          created_at?: string;
-          updated_at?: string;
-          deleted_at?: string | null;
-        };
-        Update: {
-          id?: string;
-          organizacion_id?: string;
-          area_id?: string;
-          nombre?: string;
-          activo?: boolean;
-          created_at?: string;
-          updated_at?: string;
-          deleted_at?: string | null;
-        };
-        Relationships: [
-          {
-            foreignKeyName: "operarios_organizacion_id_fkey";
-            columns: ["organizacion_id"];
-            isOneToOne: false;
-            referencedRelation: "organizaciones";
-            referencedColumns: ["id"];
-          },
-          {
-            foreignKeyName: "operarios_area_id_fkey";
-            columns: ["area_id"];
-            isOneToOne: false;
-            referencedRelation: "areas";
-            referencedColumns: ["id"];
-          },
-        ];
-      };
-      horarios_semanales: {
-        Row: {
-          id: string;
-          organizacion_id: string;
-          operario_id: string;
-          dia_semana: number;
-          hora_inicio: string;
-          hora_fin: string;
-          vigente_desde: string;
-          vigente_hasta: string | null;
-          created_at: string;
-          updated_at: string;
-          deleted_at: string | null;
-        };
-        Insert: {
-          id?: string;
-          organizacion_id: string;
-          operario_id: string;
-          dia_semana: number;
-          hora_inicio: string;
-          hora_fin: string;
-          vigente_desde: string;
-          vigente_hasta?: string | null;
-          created_at?: string;
-          updated_at?: string;
-          deleted_at?: string | null;
-        };
-        Update: {
-          id?: string;
-          organizacion_id?: string;
-          operario_id?: string;
-          dia_semana?: number;
-          hora_inicio?: string;
-          hora_fin?: string;
-          vigente_desde?: string;
-          vigente_hasta?: string | null;
-          created_at?: string;
-          updated_at?: string;
-          deleted_at?: string | null;
-        };
-        Relationships: [
-          {
-            foreignKeyName: "horarios_semanales_organizacion_id_fkey";
-            columns: ["organizacion_id"];
-            isOneToOne: false;
-            referencedRelation: "organizaciones";
-            referencedColumns: ["id"];
-          },
-          {
-            foreignKeyName: "horarios_semanales_operario_id_fkey";
-            columns: ["operario_id"];
-            isOneToOne: false;
-            referencedRelation: "operarios";
-            referencedColumns: ["id"];
-          },
-        ];
-      };
-      tipos_movimiento: {
-        Row: {
-          id: string;
-          codigo: string;
-          nombre: string;
-          impacto: "suma" | "resta" | "neutro";
-          requiere_adjunto: boolean;
-          unidad: "dias" | "minutos";
-          created_at: string;
-          updated_at: string;
-        };
-        Insert: {
-          id?: string;
-          codigo: string;
-          nombre: string;
-          impacto: "suma" | "resta" | "neutro";
-          requiere_adjunto?: boolean;
-          unidad?: "dias" | "minutos";
-          created_at?: string;
-          updated_at?: string;
-        };
-        Update: {
-          id?: string;
-          codigo?: string;
-          nombre?: string;
-          impacto?: "suma" | "resta" | "neutro";
-          requiere_adjunto?: boolean;
-          unidad?: "dias" | "minutos";
-          created_at?: string;
-          updated_at?: string;
-        };
-        Relationships: [];
-      };
-      movimientos: {
-        Row: {
-          id: string;
-          organizacion_id: string;
-          operario_id: string;
-          admin_id: string;
-          tipo_movimiento_id: string;
-          fecha: string;
-          cantidad: number;
-          observaciones: string | null;
-          adjunto_url: string | null;
-          created_at: string;
-          updated_at: string;
-          deleted_at: string | null;
-        };
-        Insert: {
-          id?: string;
-          organizacion_id: string;
-          operario_id: string;
-          admin_id: string;
-          tipo_movimiento_id: string;
-          fecha: string;
-          cantidad?: number;
-          observaciones?: string | null;
-          adjunto_url?: string | null;
-          created_at?: string;
-          updated_at?: string;
-          deleted_at?: string | null;
-        };
-        Update: {
-          id?: string;
-          organizacion_id?: string;
-          operario_id?: string;
-          admin_id?: string;
-          tipo_movimiento_id?: string;
-          fecha?: string;
-          cantidad?: number;
-          observaciones?: string | null;
-          adjunto_url?: string | null;
-          created_at?: string;
-          updated_at?: string;
-          deleted_at?: string | null;
-        };
-        Relationships: [
-          {
-            foreignKeyName: "movimientos_organizacion_id_fkey";
-            columns: ["organizacion_id"];
-            isOneToOne: false;
-            referencedRelation: "organizaciones";
-            referencedColumns: ["id"];
-          },
-          {
-            foreignKeyName: "movimientos_operario_id_fkey";
-            columns: ["operario_id"];
-            isOneToOne: false;
-            referencedRelation: "operarios";
-            referencedColumns: ["id"];
-          },
-          {
-            foreignKeyName: "movimientos_admin_id_fkey";
-            columns: ["admin_id"];
-            isOneToOne: false;
-            referencedRelation: "admins";
-            referencedColumns: ["id"];
-          },
-          {
-            foreignKeyName: "movimientos_tipo_movimiento_id_fkey";
-            columns: ["tipo_movimiento_id"];
-            isOneToOne: false;
-            referencedRelation: "tipos_movimiento";
-            referencedColumns: ["id"];
-          },
-        ];
-      };
       auditoria: {
         Row: {
-          id: string;
-          organizacion_id: string;
+          accion: string;
           admin_id: string | null;
-          super_admin_id: string | null;
-          accion: "crear" | "editar" | "eliminar";
-          entidad: string;
-          entidad_id: string;
+          created_at: string;
           datos_anteriores: Json | null;
           datos_nuevos: Json | null;
-          created_at: string;
-        };
-        Insert: {
-          id?: string;
-          organizacion_id: string;
-          admin_id?: string | null;
-          super_admin_id?: string | null;
-          accion: "crear" | "editar" | "eliminar";
           entidad: string;
           entidad_id: string;
+          id: string;
+          organizacion_id: string;
+          super_admin_id: string | null;
+        };
+        Insert: {
+          accion: string;
+          admin_id?: string | null;
+          created_at?: string;
           datos_anteriores?: Json | null;
           datos_nuevos?: Json | null;
-          created_at?: string;
+          entidad: string;
+          entidad_id: string;
+          id?: string;
+          organizacion_id: string;
+          super_admin_id?: string | null;
         };
         Update: {
-          id?: string;
-          organizacion_id?: string;
+          accion?: string;
           admin_id?: string | null;
-          super_admin_id?: string | null;
-          accion?: "crear" | "editar" | "eliminar";
-          entidad?: string;
-          entidad_id?: string;
+          created_at?: string;
           datos_anteriores?: Json | null;
           datos_nuevos?: Json | null;
-          created_at?: string;
+          entidad?: string;
+          entidad_id?: string;
+          id?: string;
+          organizacion_id?: string;
+          super_admin_id?: string | null;
         };
         Relationships: [
-          {
-            foreignKeyName: "auditoria_organizacion_id_fkey";
-            columns: ["organizacion_id"];
-            isOneToOne: false;
-            referencedRelation: "organizaciones";
-            referencedColumns: ["id"];
-          },
           {
             foreignKeyName: "auditoria_admin_id_fkey";
             columns: ["admin_id"];
             isOneToOne: false;
             referencedRelation: "admins";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "auditoria_organizacion_id_fkey";
+            columns: ["organizacion_id"];
+            isOneToOne: false;
+            referencedRelation: "organizaciones";
             referencedColumns: ["id"];
           },
           {
@@ -448,41 +187,407 @@ export type Database = {
           },
         ];
       };
+      horarios_semanales: {
+        Row: {
+          created_at: string;
+          deleted_at: string | null;
+          dia_semana: number;
+          hora_fin: string;
+          hora_inicio: string;
+          id: string;
+          operario_id: string;
+          organizacion_id: string;
+          updated_at: string;
+          vigente_desde: string;
+          vigente_hasta: string | null;
+        };
+        Insert: {
+          created_at?: string;
+          deleted_at?: string | null;
+          dia_semana: number;
+          hora_fin: string;
+          hora_inicio: string;
+          id?: string;
+          operario_id: string;
+          organizacion_id: string;
+          updated_at?: string;
+          vigente_desde: string;
+          vigente_hasta?: string | null;
+        };
+        Update: {
+          created_at?: string;
+          deleted_at?: string | null;
+          dia_semana?: number;
+          hora_fin?: string;
+          hora_inicio?: string;
+          id?: string;
+          operario_id?: string;
+          organizacion_id?: string;
+          updated_at?: string;
+          vigente_desde?: string;
+          vigente_hasta?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "horarios_semanales_operario_id_fkey";
+            columns: ["operario_id"];
+            isOneToOne: false;
+            referencedRelation: "operarios";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "horarios_semanales_organizacion_id_fkey";
+            columns: ["organizacion_id"];
+            isOneToOne: false;
+            referencedRelation: "organizaciones";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      movimientos: {
+        Row: {
+          adjunto_url: string | null;
+          admin_id: string;
+          cantidad: number;
+          created_at: string;
+          deleted_at: string | null;
+          fecha: string;
+          id: string;
+          observaciones: string | null;
+          operario_id: string;
+          organizacion_id: string;
+          tipo_movimiento_id: string;
+          updated_at: string;
+        };
+        Insert: {
+          adjunto_url?: string | null;
+          admin_id: string;
+          cantidad?: number;
+          created_at?: string;
+          deleted_at?: string | null;
+          fecha: string;
+          id?: string;
+          observaciones?: string | null;
+          operario_id: string;
+          organizacion_id: string;
+          tipo_movimiento_id: string;
+          updated_at?: string;
+        };
+        Update: {
+          adjunto_url?: string | null;
+          admin_id?: string;
+          cantidad?: number;
+          created_at?: string;
+          deleted_at?: string | null;
+          fecha?: string;
+          id?: string;
+          observaciones?: string | null;
+          operario_id?: string;
+          organizacion_id?: string;
+          tipo_movimiento_id?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "movimientos_admin_id_fkey";
+            columns: ["admin_id"];
+            isOneToOne: false;
+            referencedRelation: "admins";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "movimientos_operario_id_fkey";
+            columns: ["operario_id"];
+            isOneToOne: false;
+            referencedRelation: "operarios";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "movimientos_organizacion_id_fkey";
+            columns: ["organizacion_id"];
+            isOneToOne: false;
+            referencedRelation: "organizaciones";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "movimientos_tipo_movimiento_id_fkey";
+            columns: ["tipo_movimiento_id"];
+            isOneToOne: false;
+            referencedRelation: "tipos_movimiento";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      operarios: {
+        Row: {
+          activo: boolean;
+          area_id: string;
+          created_at: string;
+          deleted_at: string | null;
+          id: string;
+          nombre: string;
+          organizacion_id: string;
+          updated_at: string;
+        };
+        Insert: {
+          activo?: boolean;
+          area_id: string;
+          created_at?: string;
+          deleted_at?: string | null;
+          id?: string;
+          nombre: string;
+          organizacion_id: string;
+          updated_at?: string;
+        };
+        Update: {
+          activo?: boolean;
+          area_id?: string;
+          created_at?: string;
+          deleted_at?: string | null;
+          id?: string;
+          nombre?: string;
+          organizacion_id?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "operarios_area_id_fkey";
+            columns: ["area_id"];
+            isOneToOne: false;
+            referencedRelation: "areas";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "operarios_organizacion_id_fkey";
+            columns: ["organizacion_id"];
+            isOneToOne: false;
+            referencedRelation: "organizaciones";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      organizaciones: {
+        Row: {
+          activo: boolean;
+          created_at: string;
+          deleted_at: string | null;
+          id: string;
+          nombre: string;
+          updated_at: string;
+        };
+        Insert: {
+          activo?: boolean;
+          created_at?: string;
+          deleted_at?: string | null;
+          id?: string;
+          nombre: string;
+          updated_at?: string;
+        };
+        Update: {
+          activo?: boolean;
+          created_at?: string;
+          deleted_at?: string | null;
+          id?: string;
+          nombre?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      super_admins: {
+        Row: {
+          created_at: string;
+          email: string;
+          id: string;
+          nombre: string;
+          updated_at: string;
+        };
+        Insert: {
+          created_at?: string;
+          email: string;
+          id: string;
+          nombre: string;
+          updated_at?: string;
+        };
+        Update: {
+          created_at?: string;
+          email?: string;
+          id?: string;
+          nombre?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      tipos_movimiento: {
+        Row: {
+          codigo: string;
+          created_at: string;
+          id: string;
+          impacto: string;
+          nombre: string;
+          requiere_adjunto: boolean;
+          unidad: string;
+          updated_at: string;
+        };
+        Insert: {
+          codigo: string;
+          created_at?: string;
+          id?: string;
+          impacto: string;
+          nombre: string;
+          requiere_adjunto?: boolean;
+          unidad?: string;
+          updated_at?: string;
+        };
+        Update: {
+          codigo?: string;
+          created_at?: string;
+          id?: string;
+          impacto?: string;
+          nombre?: string;
+          requiere_adjunto?: boolean;
+          unidad?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
     };
-    Views: Record<string, never>;
+    Views: {
+      [_ in never]: never;
+    };
     Functions: {
-      org_actual: {
-        Args: Record<string, never>;
-        Returns: string;
-      };
-      es_super_admin: {
-        Args: Record<string, never>;
-        Returns: boolean;
-      };
-      rol_actual: {
-        Args: Record<string, never>;
-        Returns: string;
-      };
-      puede_ver_area: {
-        Args: { p_area_id: string };
-        Returns: boolean;
-      };
+      es_super_admin: { Args: never; Returns: boolean };
+      org_actual: { Args: never; Returns: string };
+      puede_ver_area: { Args: { p_area_id: string }; Returns: boolean };
+      rol_actual: { Args: never; Returns: string };
     };
-    Enums: Record<string, never>;
-    CompositeTypes: Record<string, never>;
+    Enums: {
+      [_ in never]: never;
+    };
+    CompositeTypes: {
+      [_ in never]: never;
+    };
   };
 };
 
-type PersonalcheckSchema = Database["personalcheck"];
+type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">;
 
-export type Tables<T extends keyof PersonalcheckSchema["Tables"]> =
-  PersonalcheckSchema["Tables"][T]["Row"];
+type DefaultSchema = DatabaseWithoutInternals[Extract<
+  keyof Database,
+  "public"
+>];
 
-export type TablesInsert<T extends keyof PersonalcheckSchema["Tables"]> =
-  PersonalcheckSchema["Tables"][T]["Insert"];
+export type Tables<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals;
+  }
+    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
+    : never) = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals;
+}
+  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
+      Row: infer R;
+    }
+    ? R
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])
+    ? (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
+        Row: infer R;
+      }
+      ? R
+      : never
+    : never;
 
-export type TablesUpdate<T extends keyof PersonalcheckSchema["Tables"]> =
-  PersonalcheckSchema["Tables"][T]["Update"];
+export type TablesInsert<
+  DefaultSchemaTableNameOrOptions extends
+    keyof DefaultSchema["Tables"] | { schema: keyof DatabaseWithoutInternals },
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals;
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    : never) = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals;
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+      Insert: infer I;
+    }
+    ? I
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Insert: infer I;
+      }
+      ? I
+      : never
+    : never;
 
-export type Enums<T extends keyof PersonalcheckSchema["Enums"]> =
-  PersonalcheckSchema["Enums"][T];
+export type TablesUpdate<
+  DefaultSchemaTableNameOrOptions extends
+    keyof DefaultSchema["Tables"] | { schema: keyof DatabaseWithoutInternals },
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals;
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    : never) = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals;
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+      Update: infer U;
+    }
+    ? U
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Update: infer U;
+      }
+      ? U
+      : never
+    : never;
+
+export type Enums<
+  DefaultSchemaEnumNameOrOptions extends
+    keyof DefaultSchema["Enums"] | { schema: keyof DatabaseWithoutInternals },
+  EnumName extends (DefaultSchemaEnumNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals;
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
+    : never) = never,
+> = DefaultSchemaEnumNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals;
+}
+  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
+  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
+    ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
+    : never;
+
+export type CompositeTypes<
+  PublicCompositeTypeNameOrOptions extends
+    | keyof DefaultSchema["CompositeTypes"]
+    | { schema: keyof DatabaseWithoutInternals },
+  CompositeTypeName extends (PublicCompositeTypeNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals;
+  }
+    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
+    : never) = never,
+> = PublicCompositeTypeNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals;
+}
+  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
+  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
+    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
+    : never;
+
+export const Constants = {
+  personalcheck: {
+    Enums: {},
+  },
+} as const;
