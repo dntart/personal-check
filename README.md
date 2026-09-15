@@ -47,7 +47,9 @@ Además, en **Project Settings > Data API**, el schema `personalcheck` y sus
 10 tablas tienen que estar tildados en "Exposed schemas" / "Exposed tables"
 — a diferencia de `public`, un schema nuevo no se expone solo.
 
-Datos de ejemplo del piloto real (39 personas): [`docs/seeds/seed-taller-sanchez.sql`](docs/seeds/seed-taller-sanchez.sql).
+Los seeds con datos reales de clientes (nombres de personas) viven en
+`docs/seeds/` **fuera del repo** (gitignored a propósito) — pedile el
+archivo a Dante si necesitás recargarlos, nunca van a control de versiones.
 
 ## Deploy
 

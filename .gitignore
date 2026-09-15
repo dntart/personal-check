@@ -40,6 +40,10 @@ yarn-error.log*
 # caché temporal del CLI de Supabase (queda al correr `npm run types:generate`)
 /supabase/.temp
 
+# Seeds con datos reales de clientes (nombres reales de personas) — nunca
+# van al repo, ni siquiera privado. Purgados del historial el 2026-09-15.
+docs/seeds/
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts
