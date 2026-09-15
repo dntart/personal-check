@@ -1,36 +1,61 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# PersonalCheck
 
-## Getting Started
+Micro-SaaS de gestión de personal para PyMEs con operarios por turno. Ver el
+spec funcional y de datos completo en [`docs/PERSONALCHECK-SPEC.md`](docs/PERSONALCHECK-SPEC.md)
+antes de tocar código — es la fuente de verdad de decisiones ya validadas.
 
-First, run the development server:
+Prototipo navegable (UX/flujo/copy de referencia): ver link en la sección 1
+del spec.
+
+## Stack
+
+Next.js (App Router) + TypeScript + Tailwind, sobre el proyecto Supabase
+compartido del portfolio (schema propio `personalcheck`). Ver
+`saas-shared-infra` (skill del portfolio) para la arquitectura compartida.
+
+## Setup local
 
 ```bash
+npm install
+cp .env.example .env.local   # completar con las credenciales del proyecto Supabase compartido
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+> Nota: `@supabase/supabase-js` pide Node >=22; el entorno local actual tiene
+> Node 20 (funciona igual, es solo un warning de npm). Alinear la versión de
+> Node en Vercel al deployar.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Migraciones de base de datos
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Están en [`docs/migrations/`](docs/migrations/), aplicar en este orden con
+Supabase CLI apuntando al proyecto compartido del portfolio:
 
-## Learn More
+1. `20260902_personalcheck_initial_schema.sql`
+2. `20260914_personalcheck_super_admin_y_alcance_area.sql`
+3. `20260914_personalcheck_tardanza_y_unidad.sql`
 
-To learn more about Next.js, take a look at the following resources:
+## Ramas
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- `main` — producción
+- `dev` — integración
+- `feature/nombre-corto` — trabajo en curso
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Estructura
 
-## Deploy on Vercel
+```
+src/
+  app/              # rutas (App Router)
+  components/
+  lib/
+    supabase/       # clientes browser/server
+    ai-proxy/       # si este SaaS termina usando el proxy de IA compartido
+    validations/    # esquemas zod
+  types/
+  middleware.ts     # refresco de sesión + protección de rutas
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Estado
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Fase 1 del roadmap (ver spec, sección 8): MVP funcional — auth de admin por
+invitación, nómina, horarios versionados, novedades, auditoría de solo
+lectura. Todavía no aplicado a este scaffold.
