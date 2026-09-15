@@ -62,7 +62,11 @@ export default async function DashboardPage() {
             <p className="text-xs opacity-70">Con saldo positivo</p>
           </Link>
           <Link
-            href="/auditoria?entidad=movimiento"
+            href={
+              sesion.rol === "admin"
+                ? "/auditoria?entidad=movimiento"
+                : "/nomina"
+            }
             className="rounded-sm border border-borde p-4 hover:bg-papel"
           >
             <p className="font-mono text-2xl font-semibold">

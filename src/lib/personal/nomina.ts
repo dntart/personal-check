@@ -56,99 +56,106 @@ export function agruparParaNomina(
   saldoPorOperario: Map<string, number>,
   minutosTardanzaPorOperario: Map<string, number>,
 ): AreaNomina[] {
-  return areas.map((area) => {
-    const personasDelArea = operarios.filter((o) => o.area_id === area.id);
-    const esAdmin = esAdministracion(area.nombre);
+  // `operarios` ya viene filtrado por RLS a lo que la sesión actual puede
+  // ver — un área sin nadie ahí (porque no hay personal, o porque un
+  // Supervisor no tiene esa área asignada) no debe mostrar ni su
+  // encabezado, para no ensuciar la vista con secciones vacías.
+  return areas
+    .filter((area) => operarios.some((o) => o.area_id === area.id))
+    .map((area) => {
+      const personasDelArea = operarios.filter((o) => o.area_id === area.id);
+      const esAdmin = esAdministracion(area.nombre);
 
-    const bloqueManana: PersonaNomina[] = [];
-    const bloqueTarde: PersonaNomina[] = [];
-    const bloqueUnico: PersonaNomina[] = [];
-    const sinHorario: PersonaNomina[] = [];
+      const bloqueManana: PersonaNomina[] = [];
+      const bloqueTarde: PersonaNomina[] = [];
+      const bloqueUnico: PersonaNomina[] = [];
+      const sinHorario: PersonaNomina[] = [];
 
-    for (const operario of personasDelArea) {
-      const horarios = horariosPorOperario.get(operario.id) ?? [];
-      const saldo = saldoPorOperario.get(operario.id) ?? 0;
-      const minutosTardanza = minutosTardanzaPorOperario.get(operario.id) ?? 0;
+      for (const operario of personasDelArea) {
+        const horarios = horariosPorOperario.get(operario.id) ?? [];
+        const saldo = saldoPorOperario.get(operario.id) ?? 0;
+        const minutosTardanza =
+          minutosTardanzaPorOperario.get(operario.id) ?? 0;
 
-      if (horarios.length === 0) {
-        sinHorario.push({
-          id: operario.id,
-          nombre: operario.nombre,
-          saldo,
-          minutosTardanza,
-          dias: [],
-        });
-        continue;
+        if (horarios.length === 0) {
+          sinHorario.push({
+            id: operario.id,
+            nombre: operario.nombre,
+            saldo,
+            minutosTardanza,
+            dias: [],
+          });
+          continue;
+        }
+
+        const turnoPorDia = new Map<number, Turno>();
+        for (const h of horarios) {
+          turnoPorDia.set(h.dia_semana, calcularTurno(h.hora_inicio));
+        }
+        const turnosPresentes = new Set(turnoPorDia.values());
+
+        const armarDias = (turnoDelBloque: Turno | null): DiaCelda[] =>
+          [1, 2, 3, 4, 5, 6, 7].map((dia) => {
+            const h = horarios.find((x) => x.dia_semana === dia);
+            if (!h) return { diaSemana: dia, estado: "franco" };
+            const turnoDelDia = calcularTurno(h.hora_inicio);
+            if (turnoDelBloque === null || turnoDelDia === turnoDelBloque) {
+              return {
+                diaSemana: dia,
+                estado: "horario",
+                horaInicio: h.hora_inicio,
+                horaFin: h.hora_fin,
+              };
+            }
+            return { diaSemana: dia, estado: "otro" };
+          });
+
+        if (esAdmin) {
+          bloqueUnico.push({
+            id: operario.id,
+            nombre: operario.nombre,
+            saldo,
+            minutosTardanza,
+            dias: armarDias(null),
+          });
+          continue;
+        }
+
+        if (turnosPresentes.has("manana")) {
+          bloqueManana.push({
+            id: operario.id,
+            nombre: operario.nombre,
+            saldo,
+            minutosTardanza,
+            dias: armarDias("manana"),
+          });
+        }
+        if (turnosPresentes.has("tarde")) {
+          bloqueTarde.push({
+            id: operario.id,
+            nombre: operario.nombre,
+            saldo,
+            minutosTardanza,
+            dias: armarDias("tarde"),
+          });
+        }
       }
 
-      const turnoPorDia = new Map<number, Turno>();
-      for (const h of horarios) {
-        turnoPorDia.set(h.dia_semana, calcularTurno(h.hora_inicio));
-      }
-      const turnosPresentes = new Set(turnoPorDia.values());
+      const bloques: BloqueTurno[] = esAdmin
+        ? [{ turno: null, personas: bloqueUnico }]
+        : [
+            { turno: "manana", personas: bloqueManana },
+            { turno: "tarde", personas: bloqueTarde },
+          ];
 
-      const armarDias = (turnoDelBloque: Turno | null): DiaCelda[] =>
-        [1, 2, 3, 4, 5, 6, 7].map((dia) => {
-          const h = horarios.find((x) => x.dia_semana === dia);
-          if (!h) return { diaSemana: dia, estado: "franco" };
-          const turnoDelDia = calcularTurno(h.hora_inicio);
-          if (turnoDelBloque === null || turnoDelDia === turnoDelBloque) {
-            return {
-              diaSemana: dia,
-              estado: "horario",
-              horaInicio: h.hora_inicio,
-              horaFin: h.hora_fin,
-            };
-          }
-          return { diaSemana: dia, estado: "otro" };
-        });
-
-      if (esAdmin) {
-        bloqueUnico.push({
-          id: operario.id,
-          nombre: operario.nombre,
-          saldo,
-          minutosTardanza,
-          dias: armarDias(null),
-        });
-        continue;
-      }
-
-      if (turnosPresentes.has("manana")) {
-        bloqueManana.push({
-          id: operario.id,
-          nombre: operario.nombre,
-          saldo,
-          minutosTardanza,
-          dias: armarDias("manana"),
-        });
-      }
-      if (turnosPresentes.has("tarde")) {
-        bloqueTarde.push({
-          id: operario.id,
-          nombre: operario.nombre,
-          saldo,
-          minutosTardanza,
-          dias: armarDias("tarde"),
-        });
-      }
-    }
-
-    const bloques: BloqueTurno[] = esAdmin
-      ? [{ turno: null, personas: bloqueUnico }]
-      : [
-          { turno: "manana", personas: bloqueManana },
-          { turno: "tarde", personas: bloqueTarde },
-        ];
-
-    return {
-      areaId: area.id,
-      areaNombre: area.nombre,
-      esAdministracion: esAdmin,
-      bloques,
-      sinHorario,
-    };
-  });
+      return {
+        areaId: area.id,
+        areaNombre: area.nombre,
+        esAdministracion: esAdmin,
+        bloques,
+        sinHorario,
+      };
+    });
 }
 
 export type FiltroNomina = "negativo" | "positivo" | "alertas" | undefined;

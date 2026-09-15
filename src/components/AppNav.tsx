@@ -16,8 +16,11 @@ type Props = {
 const LINKS_ORGANIZACION = [
   { href: "/", label: "Dashboard" },
   { href: "/nomina", label: "Nómina de personal" },
-  { href: "/auditoria", label: "Auditoría" },
 ];
+
+// Auditoría es capacidad de Admin de organización, no de Supervisor (spec
+// sección 3) — RLS ya lo bloquea igual, esto es solo para no ofrecerlo.
+const LINKS_SOLO_ADMIN = [{ href: "/auditoria", label: "Auditoría" }];
 
 const LINKS_SUPER_ADMIN = [{ href: "/super-admin", label: "Organizaciones" }];
 
@@ -29,7 +32,12 @@ export function AppNav({
   alertas,
 }: Props) {
   const pathname = usePathname();
-  const links = esSuperAdmin ? LINKS_SUPER_ADMIN : LINKS_ORGANIZACION;
+  const links = esSuperAdmin
+    ? LINKS_SUPER_ADMIN
+    : [
+        ...LINKS_ORGANIZACION,
+        ...(esAdminDeOrganizacion ? LINKS_SOLO_ADMIN : []),
+      ];
 
   return (
     <header className="border-b border-borde">

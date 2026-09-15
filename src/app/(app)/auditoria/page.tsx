@@ -1,3 +1,5 @@
+import { redirect } from "next/navigation";
+import { obtenerSesion } from "@/lib/supabase/sesion";
 import { obtenerAuditoria } from "@/lib/personal/auditoria-listado";
 
 const ACCION_LABEL: Record<string, string> = {
@@ -34,6 +36,10 @@ export default async function AuditoriaPage({
 }: {
   searchParams: Promise<{ entidad?: string }>;
 }) {
+  const sesion = await obtenerSesion();
+  if (!sesion) redirect("/login");
+  if (sesion.tipo !== "admin" || sesion.rol !== "admin") redirect("/");
+
   const { entidad } = await searchParams;
   const filas = await obtenerAuditoria({ entidad });
 
