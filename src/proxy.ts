@@ -7,7 +7,7 @@ import { type NextRequest, NextResponse } from "next/server";
  * circunstancia (spec, sección 3) — ni admin ni supervisor tienen otra
  * puerta de entrada que no sea /login.
  */
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   let response = NextResponse.next({ request });
 
   const supabase = createServerClient(

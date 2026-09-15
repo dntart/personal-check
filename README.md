@@ -51,7 +51,7 @@ src/
     ai-proxy/       # si este SaaS termina usando el proxy de IA compartido
     validations/    # esquemas zod
   types/
-  middleware.ts     # refresco de sesión + protección de rutas
+  proxy.ts          # refresco de sesión + protección de rutas (convención Next.js 16)
 ```
 
 ## Estado
