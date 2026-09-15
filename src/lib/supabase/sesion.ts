@@ -34,7 +34,7 @@ export async function obtenerSesion(): Promise<SesionPersonalCheck | null> {
 
   const { data: admin } = await supabase
     .from("admins")
-    .select("id, nombre, email, rol, organizacion_id")
+    .select("id, nombre, email, rol, organizacion_id, organizaciones(nombre)")
     .eq("id", user.id)
     .is("deleted_at", null)
     .maybeSingle();
@@ -46,6 +46,9 @@ export async function obtenerSesion(): Promise<SesionPersonalCheck | null> {
       );
       return null;
     }
+    const organizacion = admin.organizaciones as unknown as {
+      nombre: string;
+    } | null;
     return {
       tipo: "admin",
       id: admin.id,
@@ -53,6 +56,7 @@ export async function obtenerSesion(): Promise<SesionPersonalCheck | null> {
       email: admin.email,
       rol: admin.rol,
       organizacionId: admin.organizacion_id,
+      organizacionNombre: organizacion?.nombre ?? "",
     };
   }
 

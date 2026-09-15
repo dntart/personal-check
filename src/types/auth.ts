@@ -12,6 +12,7 @@ export type SesionPersonalCheck =
       email: string;
       rol: "admin" | "supervisor";
       organizacionId: string;
+      organizacionNombre: string;
     }
   | {
       tipo: "super_admin";
