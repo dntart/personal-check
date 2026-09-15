@@ -4,6 +4,9 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { obtenerSesion } from "@/lib/supabase/sesion";
 import { registrarAuditoria } from "@/lib/personal/auditoria";
+import { obtenerSaldoOperario, obtenerEmailsAdmins } from "@/lib/personal/data";
+import { UMBRAL_SALDO_ALTO } from "@/lib/personal/reglas";
+import { enviarEmail } from "@/lib/resend";
 import { cargarNovedadSchema } from "@/lib/validations/personal";
 
 export type EstadoNovedad = { error: string } | null;
@@ -79,5 +82,43 @@ export async function cargarNovedad(
     datosNuevos: parsed.data,
   });
 
+  await avisarSiSaldoFueraDeRango(operarioId, sesion.organizacionNombre);
+
   redirect(`/personal/${operarioId}`);
+}
+
+/**
+ * Alertas (spec sección 5 y roadmap Fase 2): si esta novedad dejó a la
+ * persona con saldo negativo o ≥ umbral, avisa por email a los Admin de la
+ * organización. No bloquea la carga de la novedad si el email falla.
+ */
+async function avisarSiSaldoFueraDeRango(
+  operarioId: string,
+  organizacionNombre: string,
+) {
+  try {
+    const supabase = await createClient();
+    const [saldo, emails, { data: operario }] = await Promise.all([
+      obtenerSaldoOperario(operarioId),
+      obtenerEmailsAdmins(),
+      supabase
+        .from("operarios")
+        .select("nombre")
+        .eq("id", operarioId)
+        .maybeSingle(),
+    ]);
+
+    if (saldo >= 0 && saldo < UMBRAL_SALDO_ALTO) return;
+
+    const motivo =
+      saldo < 0 ? "saldo negativo" : `saldo alto (≥ ${UMBRAL_SALDO_ALTO} días)`;
+
+    await enviarEmail({
+      to: emails,
+      subject: `PersonalCheck — Alerta de ${motivo}: ${operario?.nombre ?? "una persona"}`,
+      text: `${operario?.nombre ?? "Una persona"} tiene ${motivo} en ${organizacionNombre}.\n\nSaldo actual: ${saldo} días.\n\nRevisalo en la Nómina de PersonalCheck.`,
+    });
+  } catch (err) {
+    console.error("No se pudo evaluar/enviar la alerta de saldo:", err);
+  }
 }

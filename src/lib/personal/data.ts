@@ -203,6 +203,40 @@ export async function obtenerUltimasNovedades(limite = 8) {
   });
 }
 
+/** Saldo actual de una persona (solo movimientos en días, no minutos). */
+export async function obtenerSaldoOperario(
+  operarioId: string,
+): Promise<number> {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("movimientos")
+    .select("cantidad, tipos_movimiento(impacto, unidad)")
+    .eq("operario_id", operarioId)
+    .is("deleted_at", null);
+
+  let saldo = 0;
+  for (const m of data ?? []) {
+    const tipo = m.tipos_movimiento as unknown as {
+      impacto: "suma" | "resta" | "neutro";
+      unidad: "dias" | "minutos";
+    } | null;
+    if (!tipo || tipo.unidad !== "dias") continue;
+    saldo += calcularEfecto(tipo.impacto, m.cantidad);
+  }
+  return saldo;
+}
+
+/** Emails de los Admin de organización (no Supervisores) para alertas. */
+export async function obtenerEmailsAdmins(): Promise<string[]> {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("admins")
+    .select("email")
+    .eq("rol", "admin")
+    .is("deleted_at", null);
+  return (data ?? []).map((a) => a.email);
+}
+
 export async function obtenerAreas() {
   const supabase = await createClient();
   const { data } = await supabase

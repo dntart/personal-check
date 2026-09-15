@@ -5,6 +5,7 @@ import {
   obtenerEstadisticasDashboard,
   obtenerUltimasNovedades,
 } from "@/lib/personal/data";
+import { InformeDescarga } from "@/components/InformeDescarga";
 
 const FORMATO_FECHA = new Intl.DateTimeFormat("es-AR", {
   day: "numeric",
@@ -77,15 +78,8 @@ export default async function DashboardPage() {
             <h2 className="text-sm font-semibold uppercase tracking-wide opacity-70">
               Últimas novedades cargadas
             </h2>
-            <div className="flex gap-2">
-              <button
-                type="button"
-                disabled
-                title="Todavía no implementado (Fase 2 del roadmap)"
-                className="rounded-sm border border-borde px-3 py-1.5 text-sm opacity-50"
-              >
-                Descargar resumen
-              </button>
+            <div className="flex flex-wrap gap-2">
+              <InformeDescarga organizacionNombre={sesion.organizacionNombre} />
               <Link
                 href="/nomina"
                 className="rounded-sm border border-borde px-3 py-1.5 text-sm hover:bg-papel"
