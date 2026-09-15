@@ -42,6 +42,9 @@ proyecto compartido del portfolio):
    aunque el schema esté expuesto en Project Settings > Data API
 6. `20260915_personalcheck_admins_eliminados_pierden_acceso.sql`
 7. `20260915_personalcheck_auditoria_solo_admin.sql`
+8. `20260915_personalcheck_tardanza_justificada.sql` — separa Tardanza en
+   injustificada/justificada (decisión de negocio que reemplaza a la
+   original del spec)
 
 Además, en **Project Settings > Data API**, el schema `personalcheck` y sus
 10 tablas tienen que estar tildados en "Exposed schemas" / "Exposed tables"

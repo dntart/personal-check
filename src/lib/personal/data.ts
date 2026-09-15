@@ -1,6 +1,10 @@
 import "server-only";
 import { createClient } from "@/lib/supabase/server";
-import { calcularEfecto, UMBRAL_SALDO_ALTO } from "./reglas";
+import {
+  calcularEfecto,
+  UMBRAL_SALDO_ALTO,
+  CODIGO_TARDANZA_INJUSTIFICADA,
+} from "./reglas";
 import { agruparParaNomina, type AreaNomina } from "./nomina";
 
 /**
@@ -103,10 +107,16 @@ export async function obtenerNomina(): Promise<AreaNomina[]> {
     } | null;
     if (!tipo) continue;
     if (tipo.unidad === "minutos") {
-      minutosTardanzaPorOperario.set(
-        m.operario_id,
-        (minutosTardanzaPorOperario.get(m.operario_id) ?? 0) + m.cantidad,
-      );
+      // Solo la tardanza injustificada cuenta para el contador informativo
+      // — la justificada queda registrada (aparece en el timeline y en el
+      // informe General) pero no suma acá, mismo criterio que
+      // falta_justificada con el saldo en días.
+      if (tipo.codigo === CODIGO_TARDANZA_INJUSTIFICADA) {
+        minutosTardanzaPorOperario.set(
+          m.operario_id,
+          (minutosTardanzaPorOperario.get(m.operario_id) ?? 0) + m.cantidad,
+        );
+      }
       continue;
     }
     const efecto = calcularEfecto(tipo.impacto, m.cantidad);
@@ -319,7 +329,9 @@ export async function obtenerFichaPersonal(operarioId: string) {
     } | null;
     if (!tipo) continue;
     if (tipo.unidad === "minutos") {
-      minutosTardanza += m.cantidad;
+      if (tipo.codigo === CODIGO_TARDANZA_INJUSTIFICADA) {
+        minutosTardanza += m.cantidad;
+      }
     } else {
       saldo += calcularEfecto(tipo.impacto, m.cantidad);
     }

@@ -1,7 +1,7 @@
 // Generación de PDF/Excel — deliberadamente client-side (spec sección 2:
 // "PDF client-side (jsPDF, como en el prototipo)"). Los imports de jsPDF/
 // xlsx son dinámicos para no meterlos en el bundle inicial de cada página.
-import type { DatosInforme, TipoInforme } from "./informes";
+import type { DatosInforme } from "./informes";
 
 export const NOMBRE_MES = [
   "Enero",
@@ -18,15 +18,9 @@ export const NOMBRE_MES = [
   "Diciembre",
 ];
 
-const TITULO_TIPO: Record<TipoInforme, string> = {
-  general: "General",
-  a_favor: "Solo días a favor",
-  a_descontar: "Solo días a descontar",
-};
-
 function nombreArchivo(datos: DatosInforme, extension: string) {
   const mesStr = String(datos.mes).padStart(2, "0");
-  return `personalcheck-${datos.anio}-${mesStr}-${datos.tipo}.${extension}`;
+  return `personalcheck-${datos.anio}-${mesStr}-${datos.filtro}.${extension}`;
 }
 
 function formatearCantidad(cantidad: number, unidad: "dias" | "minutos") {
@@ -44,7 +38,7 @@ export async function generarPdf(
   ]);
 
   const doc = new jsPDF();
-  const titulo = `Informe de novedades — ${TITULO_TIPO[datos.tipo]}`;
+  const titulo = `Informe de novedades — ${datos.filtroLabel}`;
   const subtitulo = `${organizacionNombre} — ${NOMBRE_MES[datos.mes - 1]} ${datos.anio}`;
 
   doc.setFontSize(14);
@@ -82,7 +76,7 @@ export async function generarPdf(
     head: [["Persona", "Total"]],
     body: datos.resumen.map((r) => [
       r.nombre,
-      formatearCantidad(r.total, "dias"),
+      formatearCantidad(r.total, r.unidad),
     ]),
     styles: { fontSize: 8 },
     headStyles: { fillColor: [31, 77, 76] },
@@ -108,10 +102,12 @@ export async function generarExcel(
     })),
   );
 
+  const unidadResumen = datos.resumen[0]?.unidad ?? "dias";
   const hojaResumen = XLSX.utils.json_to_sheet(
     datos.resumen.map((r) => ({
       Persona: r.nombre,
-      "Total histórico (días)": r.total,
+      [`Total histórico (${unidadResumen === "minutos" ? "minutos" : "días"})`]:
+        r.total,
     })),
   );
 
@@ -122,7 +118,7 @@ export async function generarExcel(
     hojaNovedades,
     [
       [
-        `${organizacionNombre} — ${NOMBRE_MES[datos.mes - 1]} ${datos.anio} — ${TITULO_TIPO[datos.tipo]}`,
+        `${organizacionNombre} — ${NOMBRE_MES[datos.mes - 1]} ${datos.anio} — ${datos.filtroLabel}`,
       ],
     ],
     { origin: -1 },

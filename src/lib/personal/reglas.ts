@@ -48,6 +48,17 @@ export function calcularEfecto(
 
 export const UMBRAL_SALDO_ALTO = 15;
 
+/**
+ * Tardanza se separa en injustificada/justificada (decisión de negocio que
+ * reemplaza a la de spec sección 5/9 — a veces la demora es por una causa
+ * ajena a la persona, ej: no le entregaron la llave, y no debería anotarse
+ * como una tardanza real). Solo la injustificada cuenta para el contador
+ * informativo de minutos acumulados — mismo patrón que
+ * falta_injustificada/falta_justificada. Ninguna de las dos toca el saldo
+ * en días.
+ */
+export const CODIGO_TARDANZA_INJUSTIFICADA = "tardanza_injustificada";
+
 export function esAdministracion(nombreDeArea: string): boolean {
   return nombreDeArea.trim().toLowerCase() === "administración";
 }

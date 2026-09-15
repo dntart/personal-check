@@ -61,11 +61,10 @@ Tres niveles de rol, cada uno con un alcance distinto — **ver también `202609
 
 ## 4. Modelo de datos
 
-El schema completo, con RLS multi-tenant, está en tres migraciones — aplicalas en este orden con Supabase CLI:
-
-1. `20260902_personalcheck_initial_schema.sql` (base: organizaciones, admins, areas, operarios, horarios_semanales, tipos_movimiento, movimientos, auditoria)
-2. `20260914_personalcheck_super_admin_y_alcance_area.sql` (Super Admin, activación de organizaciones, alcance por área de los Supervisores)
-3. `20260914_personalcheck_tardanza_y_unidad.sql` (columna `unidad` en tipos_movimiento + el tipo Tardanza)
+El schema completo, con RLS multi-tenant, está en `docs/migrations/` — la
+lista completa y actualizada de migraciones (y el orden para aplicarlas)
+vive en el [`README.md`](../README.md) del repo, no acá, para no mantener
+dos listas desincronizadas.
 
 No las dupliques acá; estas son las decisiones clave detrás de ese schema:
 
@@ -99,14 +98,21 @@ El saldo de cada persona **nunca se calcula a partir del reloj de fichaje**. Se 
 | Día/hora extra trabajado | Días        | Suma                                                                   | No                  |
 | Día compensado tomado    | Días        | Resta                                                                  | No                  |
 | Ajuste manual            | Días        | Variable — el signo lo define el admin al cargar la cantidad           | No                  |
-| Tardanza                 | **Minutos** | **Siempre neutro — nunca toca el saldo en días**                       | No                  |
+| Tardanza injustificada   | **Minutos** | **Siempre neutro — nunca toca el saldo en días**                       | No                  |
+| Tardanza justificada     | **Minutos** | **Siempre neutro — nunca toca el saldo en días**                       | No                  |
+
+> **ACTUALIZADO 2026-09-15** — esto reemplaza la decisión de más abajo que
+> decía "no volver a preguntar". Caso real: el personal a veces ficha tarde
+> por una causa ajena (ej. no le entregaron la llave a tiempo) y esa demora
+> no debería anotarse como una tardanza real de la persona. Se separó
+> siguiendo el mismo patrón que falta_injustificada/falta_justificada.
 
 **Tardanza — reglas propias, separadas del resto del catálogo**:
 
-- Es un solo tipo, sin distinguir justificada/injustificada: si no hay una observación que la explique, ya se entiende que fue una tardanza sin más. No hace falta una segunda categoría para eso.
-- Se mide en **minutos**, no en días — y por diseño **no hay conversión automática entre minutos y días** (depende del horario de cada persona, no hay una tasa única que tenga sentido).
-- Se acumula en un **contador aparte, puramente informativo**, visible en la ficha de la persona cuando es mayor a cero. Nunca se mezcla con el saldo en días.
-- No aparece en los informes filtrados "Solo días a favor" / "Solo días a descontar" (mismo motivo que la falta justificada: no tiene efecto en días) — solo en el informe General.
+- Se separa en **injustificada** y **justificada** — misma lógica que las faltas: si no hay una causa ajena a la persona, es injustificada por defecto. La justificada no requiere adjunto obligatorio (a diferencia de la falta justificada), porque el motivo típico (ej. no le entregaron la llave) no siempre tiene un comprobante fotografiable — alcanza con la observación.
+- Se miden en **minutos**, no en días — y por diseño **no hay conversión automática entre minutos y días** (depende del horario de cada persona, no hay una tasa única que tenga sentido).
+- Solo la **injustificada** se acumula en el **contador informativo** de la ficha de la persona (visible cuando es mayor a cero). La justificada queda registrada en el timeline pero no suma a ese contador — mismo criterio que una falta justificada con el saldo en días.
+- Ninguna de las dos aparece en los informes filtrados "Solo días a favor" / "Solo días a descontar" (no tienen efecto en días) — solo en el informe General, o en un informe filtrado por ese tipo específico (ver sección de Informes).
 
 **Decisión confirmada explícitamente por Dante**: una falta justificada (con certificado médico) **nunca mueve el banco de días**, sea cual sea el motivo. Es puramente informativa/probatoria. Si en el futuro se necesita otra política (ej. que algunas faltas justificadas sí descuenten según el tipo de certificado), es un cambio de negocio a validar de nuevo — no asumir.
 
@@ -122,7 +128,8 @@ El saldo de cada persona **nunca se calcula a partir del reloj de fichaje**. Se 
 - General: todos los movimientos del mes + saldo acumulado por persona (histórico total, no solo del mes)
 - Solo días a favor: filtra movimientos con efecto positivo + total acumulado de días a favor por persona
 - Solo días a descontar: filtra movimientos con efecto negativo + total acumulado de días a descontar por persona
-- Las faltas justificadas y las tardanzas (ambas de efecto neutro) **nunca aparecen** en los dos informes filtrados, solo en el General
+- **ACTUALIZADO 2026-09-15**: además de esos 3, el filtro de tipo admite elegir **un tipo de novedad específico** (Día compensado tomado / Día u hora extra trabajado / Falta injustificada / Falta justificada / Tardanza injustificada / Tardanza justificada) — el detalle muestra solo ese tipo en el mes, y el resumen es el total histórico de esa persona en ese tipo puntual (en su propia unidad: días o minutos)
+- Las faltas justificadas y las tardanzas (ambas de efecto neutro) **nunca aparecen** en los informes "Solo a favor"/"Solo a descontar" — sí aparecen en el General, y en un informe filtrado exactamente por ese tipo
 - El Excel se genera con dos hojas: **Novedades** (el detalle) y **Resumen** (el mismo total que el PDF)
 
 ---
@@ -140,7 +147,7 @@ Ver el prototipo para el detalle visual exacto. Resumen funcional:
    - Alguien recién dado de alta, sin ningún día de horario cargado todavía, cae en un bloque aparte **"Sin horario asignado todavía"** — para que nunca desaparezca de la vista
    - **Mobile-first**: columnas Nombre y Saldo fijas (sticky) al hacer scroll horizontal, tipografía chica por defecto y que crece desde ~641px de ancho; cada bloque de turno tiene un tinte de fondo sutil propio (ver sección 7)
 4. **Ficha de personal** — horario semanal, saldo, contador de minutos de tardanza acumulados (solo si es mayor a cero), timeline de novedades con observaciones y adjunto; acciones: Cargar novedad / Editar horario / **Eliminar personal**
-5. **Cargar novedad** — tipo (catálogo fijo de 6), fecha, observaciones (campo con espacio para texto largo — soporta salto de línea real en el PDF), adjunto de imagen (obligatorio solo si el tipo lo requiere). El campo de cantidad cambia de etiqueta según el tipo: "Cantidad (± días)" o "Minutos de tardanza"
+5. **Cargar novedad** — tipo (catálogo fijo de 7 — ACTUALIZADO 2026-09-15: Tardanza se separó en injustificada/justificada), fecha, observaciones (campo con espacio para texto largo — soporta salto de línea real en el PDF), adjunto de imagen (obligatorio solo si el tipo lo requiere). El campo de cantidad cambia de etiqueta según el tipo: "Cantidad (± días)" o "Minutos de tardanza"
 6. **Editar horario** — por día de la semana; genera una nueva versión vigente y cierra la anterior
 7. **Eliminar personal** — pide un **motivo obligatorio** antes de confirmar (ej. "cargado por error, es duplicado de otra persona"); no es un borrado silencioso — queda registrado en Auditoría con quién lo hizo y por qué. Distinto conceptualmente de una "baja" por fin de relación laboral, que en el modelo real debería conservar el historial (ver nota en la sección 4, tabla `operarios`)
 8. **Auditoría** — listado de quién hizo qué y cuándo, sobre cualquier entidad
@@ -184,5 +191,5 @@ Ver el prototipo para el detalle visual exacto. Resumen funcional:
 - No existe "Administración fin de semana" como área separada — es Administración con horario de fin de semana
 - El turno no es un campo fijo de la persona ni de su horario en la base de datos — se calcula por día desde la hora de inicio (antes de las 13:00 = mañana). Esto permite representar horarios mixtos (ej. viernes tarde + sábado mañana) sin duplicar a la persona
 - Administración se muestra unificada en la Nómina, sin partir por turno, a diferencia del resto de las áreas
-- Tardanza es un solo tipo (sin distinguir justificada/injustificada), se mide en minutos, y nunca se convierte ni se mezcla con el saldo en días
+- ~~Tardanza es un solo tipo (sin distinguir justificada/injustificada)~~ — **REEMPLAZADO 2026-09-15**: se separó en injustificada/justificada (ver sección 5). Se sigue midiendo en minutos y nunca se convierte ni se mezcla con el saldo en días
 - "Eliminar personal" exige un motivo obligatorio y queda registrado en Auditoría — es un caso de error de carga, distinto de una baja real por fin de relación laboral (que en el modelo real debería conservar el historial en vez de eliminarse)

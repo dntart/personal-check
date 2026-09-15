@@ -4,7 +4,7 @@ import { obtenerSesion } from "@/lib/supabase/sesion";
 import {
   obtenerInforme,
   type DatosInforme,
-  type TipoInforme,
+  type FiltroInforme,
 } from "@/lib/personal/informes";
 
 /**
@@ -16,10 +16,10 @@ import {
 export async function obtenerDatosInformeAction(
   mes: number,
   anio: number,
-  tipo: TipoInforme,
+  filtro: FiltroInforme,
 ): Promise<DatosInforme | { error: string }> {
   const sesion = await obtenerSesion();
   if (!sesion) return { error: "No hay sesión activa." };
 
-  return obtenerInforme(mes, anio, tipo);
+  return obtenerInforme(mes, anio, filtro);
 }

@@ -7,13 +7,31 @@ import {
   generarExcel,
   NOMBRE_MES,
 } from "@/lib/personal/generar-informe";
-import type { TipoInforme } from "@/lib/personal/informes";
+import type { FiltroInforme } from "@/lib/personal/informes";
 
-const TITULO_TIPO: Record<TipoInforme, string> = {
-  general: "General",
-  a_favor: "Solo días a favor",
-  a_descontar: "Solo días a descontar",
-};
+const AGREGADOS: { valor: FiltroInforme; label: string }[] = [
+  { valor: "general", label: "General (todas las novedades)" },
+  { valor: "a_favor", label: "Solo días a favor" },
+  { valor: "a_descontar", label: "Solo días a descontar" },
+];
+
+// Catálogo fijo de novedades (spec sección 5) — todo menos "Ajuste manual",
+// que no es una novedad de personal sino una corrección administrativa.
+const TIPOS_ESPECIFICOS: { valor: FiltroInforme; label: string }[] = [
+  { valor: "compensado_tomado", label: "Día compensado tomado" },
+  { valor: "extra_trabajado", label: "Día/hora extra trabajado" },
+  { valor: "falta_injustificada", label: "Falta injustificada" },
+  { valor: "falta_justificada", label: "Falta justificada" },
+  { valor: "tardanza_injustificada", label: "Tardanza injustificada" },
+  { valor: "tardanza_justificada", label: "Tardanza justificada" },
+];
+
+function etiquetaDe(filtro: FiltroInforme): string {
+  return (
+    [...AGREGADOS, ...TIPOS_ESPECIFICOS].find((o) => o.valor === filtro)
+      ?.label ?? filtro
+  );
+}
 
 function ultimos12Meses() {
   const opciones: { mes: number; anio: number; label: string }[] = [];
@@ -36,7 +54,7 @@ export function InformeDescarga({
 }) {
   const [abierto, setAbierto] = useState(false);
   const [mesElegido, setMesElegido] = useState(0);
-  const [tipo, setTipo] = useState<TipoInforme>("general");
+  const [filtro, setFiltro] = useState<FiltroInforme>("general");
   // Antes de generar de verdad, pide un click de confirmación aparte —
   // así "PDF"/"Excel" no dispara la descarga en el primer click.
   const [pendiente, setPendiente] = useState<"pdf" | "excel" | null>(null);
@@ -57,7 +75,7 @@ export function InformeDescarga({
     setGenerando(formato);
     setError(null);
     try {
-      const datos = await obtenerDatosInformeAction(mes, anio, tipo);
+      const datos = await obtenerDatosInformeAction(mes, anio, filtro);
       if ("error" in datos) {
         setError(datos.error);
         return;
@@ -105,16 +123,27 @@ export function InformeDescarga({
           ))}
         </select>
         <select
-          value={tipo}
+          value={filtro}
           onChange={(e) => {
-            setTipo(e.target.value as TipoInforme);
+            setFiltro(e.target.value);
             setPendiente(null);
           }}
           className="rounded-sm border border-borde bg-superficie px-2 py-1 text-sm"
         >
-          <option value="general">General</option>
-          <option value="a_favor">Solo días a favor</option>
-          <option value="a_descontar">Solo días a descontar</option>
+          <optgroup label="General">
+            {AGREGADOS.map((o) => (
+              <option key={o.valor} value={o.valor}>
+                {o.label}
+              </option>
+            ))}
+          </optgroup>
+          <optgroup label="Por tipo de novedad">
+            {TIPOS_ESPECIFICOS.map((o) => (
+              <option key={o.valor} value={o.valor}>
+                {o.label}
+              </option>
+            ))}
+          </optgroup>
         </select>
         <button
           type="button"
@@ -147,7 +176,7 @@ export function InformeDescarga({
       {pendiente && (
         <div className="flex flex-wrap items-center gap-2 rounded-sm border border-acento bg-turno-manana p-2 text-sm">
           <span>
-            Vas a descargar: <strong>{TITULO_TIPO[tipo]}</strong> —{" "}
+            Vas a descargar: <strong>{etiquetaDe(filtro)}</strong> —{" "}
             <strong>{labelMes}</strong> en{" "}
             <strong>{pendiente === "pdf" ? "PDF" : "Excel"}</strong>
           </span>
