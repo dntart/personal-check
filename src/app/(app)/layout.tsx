@@ -23,6 +23,7 @@ export default async function AppLayout({
         esAdminDeOrganizacion={
           sesion.tipo === "admin" && sesion.rol === "admin"
         }
+        esSuperAdmin={sesion.tipo === "super_admin"}
         alertas={alertas}
       />
       <main className="flex flex-1 flex-col">{children}</main>

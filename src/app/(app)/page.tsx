@@ -15,6 +15,7 @@ const FORMATO_FECHA = new Intl.DateTimeFormat("es-AR", {
 export default async function DashboardPage() {
   const sesion = await obtenerSesion();
   if (!sesion) redirect("/login");
+  if (sesion.tipo === "super_admin") redirect("/super-admin");
 
   const [stats, novedades] =
     sesion.tipo === "admin"

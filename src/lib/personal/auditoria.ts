@@ -4,17 +4,20 @@ import type { Database, Json } from "@/types/database";
 
 type Cliente = SupabaseClient<Database, "personalcheck">;
 
+type ActorParams =
+  | { adminId: string; superAdminId?: never }
+  | { adminId?: never; superAdminId: string };
+
 /**
  * Registra una fila inmutable en personalcheck.auditoria (spec sección 4 y
- * 6.8). Se llama desde cada Server Action que crea/edita/elimina algo — el
- * actor es siempre el admin autenticado (el flujo de soporte del Super
- * Admin se resuelve aparte, no lo cubre este helper).
+ * 6.8). El actor es exactamente uno de los dos (constraint
+ * auditoria_actor_unico): un admin de organización, o el Super Admin
+ * actuando en modo soporte sobre cualquier organización.
  */
 export async function registrarAuditoria(
   supabase: Cliente,
-  params: {
+  params: ActorParams & {
     organizacionId: string;
-    adminId: string;
     accion: "crear" | "editar" | "eliminar";
     entidad: string;
     entidadId: string;
@@ -24,7 +27,8 @@ export async function registrarAuditoria(
 ) {
   await supabase.from("auditoria").insert({
     organizacion_id: params.organizacionId,
-    admin_id: params.adminId,
+    admin_id: params.adminId ?? null,
+    super_admin_id: params.superAdminId ?? null,
     accion: params.accion,
     entidad: params.entidad,
     entidad_id: params.entidadId,
