@@ -9,6 +9,7 @@
     "lint": "eslint",
     "format": "prettier --write .",
     "test": "vitest",
+    "types:generate": "node scripts/generate-types.mjs",
     "prepare": "husky"
   },
   "dependencies": {
@@ -32,6 +33,7 @@
     "husky": "^9.1.7",
     "lint-staged": "^16.4.0",
     "prettier": "^3.9.6",
+    "supabase": "^2.117.0",
     "tailwindcss": "^4",
     "typescript": "^5",
     "vitest": "^4.1.11"
