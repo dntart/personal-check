@@ -32,11 +32,17 @@ type ResultadoInvitacion =
 export async function invitarOEncontrarUsuario(
   email: string,
 ): Promise<ResultadoInvitacion> {
-  const invite = await fetch(`${url}/auth/v1/invite`, {
-    method: "POST",
-    headers: headers(),
-    body: JSON.stringify({ email }),
-  });
+  const sitio = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+  const redirectTo = `${sitio}/invitacion`;
+
+  const invite = await fetch(
+    `${url}/auth/v1/invite?redirect_to=${encodeURIComponent(redirectTo)}`,
+    {
+      method: "POST",
+      headers: headers(),
+      body: JSON.stringify({ email }),
+    },
+  );
 
   if (invite.ok) {
     const data = await invite.json();
