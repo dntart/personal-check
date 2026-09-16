@@ -39,7 +39,7 @@ export function NuevaPersonaForm({
             <button
               type="button"
               onClick={() => setAreaNueva((v) => !v)}
-              className="text-xs text-acento underline"
+              className="text-xs text-acento underline transition-opacity hover:opacity-70"
             >
               {areaNueva ? "Elegir área existente" : "Crear área nueva"}
             </button>
@@ -86,7 +86,7 @@ export function NuevaPersonaForm({
       <button
         type="submit"
         disabled={enviando}
-        className="mt-2 rounded-sm bg-acento px-4 py-2 text-sm font-medium text-white disabled:opacity-60"
+        className="mt-2 rounded-sm bg-acento px-4 py-2 text-sm font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-60"
       >
         {enviando ? "Guardando…" : "Agregar personal"}
       </button>

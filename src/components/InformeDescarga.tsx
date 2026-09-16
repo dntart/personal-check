@@ -232,7 +232,7 @@ export function InformeDescarga({
           type="button"
           onClick={() => elegirFormato("pdf")}
           disabled={generando !== null}
-          className="rounded-sm bg-acento px-3 py-1.5 text-sm font-medium text-white disabled:opacity-60"
+          className="rounded-sm bg-acento px-3 py-1.5 text-sm font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-60"
         >
           PDF
         </button>
@@ -240,7 +240,7 @@ export function InformeDescarga({
           type="button"
           onClick={() => elegirFormato("excel")}
           disabled={generando !== null}
-          className="rounded-sm border border-borde px-3 py-1.5 text-sm disabled:opacity-60"
+          className="rounded-sm border border-borde px-3 py-1.5 text-sm hover:bg-papel disabled:opacity-60"
         >
           Excel
         </button>
@@ -257,7 +257,7 @@ export function InformeDescarga({
             type="button"
             onClick={confirmarDescarga}
             disabled={generando !== null}
-            className="rounded-sm bg-acento px-3 py-1 text-sm font-medium text-white disabled:opacity-60"
+            className="rounded-sm bg-acento px-3 py-1 text-sm font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-60"
           >
             {generando ? "Generando…" : "Confirmar descarga"}
           </button>
@@ -265,7 +265,7 @@ export function InformeDescarga({
             type="button"
             onClick={() => setPendiente(null)}
             disabled={generando !== null}
-            className="rounded-sm border border-borde px-3 py-1 text-sm disabled:opacity-60"
+            className="rounded-sm border border-borde px-3 py-1 text-sm hover:bg-papel disabled:opacity-60"
           >
             Cancelar
           </button>

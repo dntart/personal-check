@@ -52,3 +52,14 @@ body {
   background: var(--color-papel);
   color: var(--color-texto);
 }
+
+/*
+ * El reset de Tailwind deja `cursor: default` en <button> (así se comporta
+ * un botón nativo) — pero en una app entera de botones, eso hace que nada
+ * "se sienta" clickeable. Manito en cualquier botón habilitado, en toda la
+ * app, de una sola vez — sin tener que acordarse de agregarla en cada
+ * componente nuevo.
+ */
+button:not(:disabled) {
+  cursor: pointer;
+}

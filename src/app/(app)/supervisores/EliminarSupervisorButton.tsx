@@ -28,7 +28,7 @@ export function EliminarSupervisorButton({
       <button
         type="submit"
         disabled={enviando}
-        className="text-xs text-negativo underline disabled:opacity-60"
+        className="text-xs text-negativo underline transition-opacity hover:opacity-70 disabled:opacity-60"
       >
         {enviando ? "Quitando…" : "Quitar acceso"}
       </button>

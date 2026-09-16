@@ -35,7 +35,7 @@ export function CopiarLinkInvitacion({ email }: { email: string }) {
         type="button"
         onClick={copiar}
         disabled={estado === "generando"}
-        className="text-xs text-acento underline disabled:opacity-60"
+        className="text-xs text-acento underline transition-opacity hover:opacity-70 disabled:opacity-60"
       >
         {estado === "generando"
           ? "Generando…"

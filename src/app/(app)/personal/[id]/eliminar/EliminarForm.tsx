@@ -49,7 +49,7 @@ export function EliminarForm({
       <button
         type="submit"
         disabled={enviando}
-        className="mt-2 rounded-sm bg-negativo px-4 py-2 text-sm font-medium text-white disabled:opacity-60"
+        className="mt-2 rounded-sm bg-negativo px-4 py-2 text-sm font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-60"
       >
         {enviando ? "Eliminando…" : "Confirmar eliminación"}
       </button>
