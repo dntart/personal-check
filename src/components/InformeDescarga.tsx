@@ -7,9 +7,12 @@ import {
   generarExcel,
   NOMBRE_MES,
 } from "@/lib/personal/generar-informe";
-import type { FiltroInforme } from "@/lib/personal/informes";
+import type {
+  FiltroAgregado,
+  ParametrosInforme,
+} from "@/lib/personal/informes";
 
-const AGREGADOS: { valor: FiltroInforme; label: string }[] = [
+const AGREGADOS: { valor: FiltroAgregado; label: string }[] = [
   { valor: "general", label: "General (todas las novedades)" },
   { valor: "a_favor", label: "Solo días a favor" },
   { valor: "a_descontar", label: "Solo días a descontar" },
@@ -17,21 +20,14 @@ const AGREGADOS: { valor: FiltroInforme; label: string }[] = [
 
 // Catálogo fijo de novedades (spec sección 5) — todo menos "Ajuste manual",
 // que no es una novedad de personal sino una corrección administrativa.
-const TIPOS_ESPECIFICOS: { valor: FiltroInforme; label: string }[] = [
-  { valor: "compensado_tomado", label: "Día compensado tomado" },
-  { valor: "extra_trabajado", label: "Día/hora extra trabajado" },
-  { valor: "falta_injustificada", label: "Falta injustificada" },
-  { valor: "falta_justificada", label: "Falta justificada" },
-  { valor: "tardanza_injustificada", label: "Tardanza injustificada" },
-  { valor: "tardanza_justificada", label: "Tardanza justificada" },
+const TIPOS_ESPECIFICOS: { codigo: string; label: string }[] = [
+  { codigo: "compensado_tomado", label: "Día compensado tomado" },
+  { codigo: "extra_trabajado", label: "Día/hora extra trabajado" },
+  { codigo: "falta_injustificada", label: "Falta injustificada" },
+  { codigo: "falta_justificada", label: "Falta justificada" },
+  { codigo: "tardanza_injustificada", label: "Tardanza injustificada" },
+  { codigo: "tardanza_justificada", label: "Tardanza justificada" },
 ];
-
-function etiquetaDe(filtro: FiltroInforme): string {
-  return (
-    [...AGREGADOS, ...TIPOS_ESPECIFICOS].find((o) => o.valor === filtro)
-      ?.label ?? filtro
-  );
-}
 
 function ultimos12Meses() {
   const opciones: { mes: number; anio: number; label: string }[] = [];
@@ -54,9 +50,12 @@ export function InformeDescarga({
 }) {
   const [abierto, setAbierto] = useState(false);
   const [mesElegido, setMesElegido] = useState(0);
-  const [filtro, setFiltro] = useState<FiltroInforme>("general");
-  // Antes de generar de verdad, pide un click de confirmación aparte —
-  // así "PDF"/"Excel" no dispara la descarga en el primer click.
+  const [modo, setModo] = useState<"agregado" | "especifico">("agregado");
+  const [agregado, setAgregado] = useState<FiltroAgregado>("general");
+  const [codigosElegidos, setCodigosElegidos] = useState<Set<string>>(
+    new Set(),
+  );
+  const [incluirResumen, setIncluirResumen] = useState(false);
   const [pendiente, setPendiente] = useState<"pdf" | "excel" | null>(null);
   const [generando, setGenerando] = useState<"pdf" | "excel" | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -64,18 +63,44 @@ export function InformeDescarga({
   const meses = ultimos12Meses();
   const { mes, anio, label: labelMes } = meses[mesElegido];
 
+  function toggleCodigo(codigo: string) {
+    setPendiente(null);
+    setCodigosElegidos((prev) => {
+      const next = new Set(prev);
+      if (next.has(codigo)) next.delete(codigo);
+      else next.add(codigo);
+      return next;
+    });
+  }
+
+  function armarParametros(): ParametrosInforme | null {
+    if (modo === "agregado") return { modo: "agregado", agregado };
+    if (codigosElegidos.size === 0) return null;
+    return { modo: "especifico", codigos: [...codigosElegidos] };
+  }
+
   function elegirFormato(formato: "pdf" | "excel") {
+    if (!armarParametros()) {
+      setError("Elegí al menos un tipo de novedad.");
+      return;
+    }
     setError(null);
     setPendiente(formato);
   }
 
   async function confirmarDescarga() {
     const formato = pendiente;
-    if (!formato) return;
+    const params = armarParametros();
+    if (!formato || !params) return;
     setGenerando(formato);
     setError(null);
     try {
-      const datos = await obtenerDatosInformeAction(mes, anio, filtro);
+      const datos = await obtenerDatosInformeAction(
+        mes,
+        anio,
+        params,
+        incluirResumen,
+      );
       if ("error" in datos) {
         setError(datos.error);
         return;
@@ -106,7 +131,7 @@ export function InformeDescarga({
   }
 
   return (
-    <div className="flex flex-col gap-2 rounded-sm border border-borde p-2">
+    <div className="flex flex-col gap-3 rounded-sm border border-borde p-3">
       <div className="flex flex-wrap items-center gap-2">
         <select
           value={mesElegido}
@@ -122,29 +147,87 @@ export function InformeDescarga({
             </option>
           ))}
         </select>
-        <select
-          value={filtro}
-          onChange={(e) => {
-            setFiltro(e.target.value);
+
+        <div className="flex overflow-hidden rounded-sm border border-borde text-sm">
+          <button
+            type="button"
+            onClick={() => {
+              setModo("agregado");
+              setPendiente(null);
+            }}
+            className={`px-3 py-1 ${modo === "agregado" ? "bg-acento text-white" : "hover:bg-papel"}`}
+          >
+            Agregado
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setModo("especifico");
+              setPendiente(null);
+            }}
+            className={`px-3 py-1 ${modo === "especifico" ? "bg-acento text-white" : "hover:bg-papel"}`}
+          >
+            Tipos específicos
+          </button>
+        </div>
+
+        <button
+          type="button"
+          onClick={() => {
+            setAbierto(false);
             setPendiente(null);
           }}
-          className="rounded-sm border border-borde bg-superficie px-2 py-1 text-sm"
+          className="ml-auto text-sm opacity-60 hover:opacity-100"
         >
-          <optgroup label="General">
-            {AGREGADOS.map((o) => (
-              <option key={o.valor} value={o.valor}>
-                {o.label}
-              </option>
-            ))}
-          </optgroup>
-          <optgroup label="Por tipo de novedad">
-            {TIPOS_ESPECIFICOS.map((o) => (
-              <option key={o.valor} value={o.valor}>
-                {o.label}
-              </option>
-            ))}
-          </optgroup>
-        </select>
+          Cerrar
+        </button>
+      </div>
+
+      {modo === "agregado" ? (
+        <div className="flex flex-wrap gap-3 text-sm">
+          {AGREGADOS.map((o) => (
+            <label key={o.valor} className="flex items-center gap-1.5">
+              <input
+                type="radio"
+                name="agregado"
+                checked={agregado === o.valor}
+                onChange={() => {
+                  setAgregado(o.valor);
+                  setPendiente(null);
+                }}
+              />
+              {o.label}
+            </label>
+          ))}
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 gap-1.5 text-sm sm:grid-cols-2">
+          {TIPOS_ESPECIFICOS.map((o) => (
+            <label key={o.codigo} className="flex items-center gap-1.5">
+              <input
+                type="checkbox"
+                checked={codigosElegidos.has(o.codigo)}
+                onChange={() => toggleCodigo(o.codigo)}
+              />
+              {o.label}
+            </label>
+          ))}
+        </div>
+      )}
+
+      <label className="flex items-center gap-1.5 border-t border-borde pt-2 text-sm">
+        <input
+          type="checkbox"
+          checked={incluirResumen}
+          onChange={(e) => {
+            setIncluirResumen(e.target.checked);
+            setPendiente(null);
+          }}
+        />
+        Incluir resumen acumulado histórico al final
+      </label>
+
+      <div className="flex flex-wrap items-center gap-2">
         <button
           type="button"
           onClick={() => elegirFormato("pdf")}
@@ -161,23 +244,13 @@ export function InformeDescarga({
         >
           Excel
         </button>
-        <button
-          type="button"
-          onClick={() => {
-            setAbierto(false);
-            setPendiente(null);
-          }}
-          className="text-sm opacity-60 hover:opacity-100"
-        >
-          Cerrar
-        </button>
       </div>
 
       {pendiente && (
         <div className="flex flex-wrap items-center gap-2 rounded-sm border border-acento bg-turno-manana p-2 text-sm">
           <span>
-            Vas a descargar: <strong>{etiquetaDe(filtro)}</strong> —{" "}
-            <strong>{labelMes}</strong> en{" "}
+            Vas a descargar: <strong>{labelMes}</strong>
+            {incluirResumen ? " (con resumen)" : ""} en{" "}
             <strong>{pendiente === "pdf" ? "PDF" : "Excel"}</strong>
           </span>
           <button

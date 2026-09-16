@@ -20,12 +20,18 @@ export const NOMBRE_MES = [
 
 function nombreArchivo(datos: DatosInforme, extension: string) {
   const mesStr = String(datos.mes).padStart(2, "0");
-  return `personalcheck-${datos.anio}-${mesStr}-${datos.filtro}.${extension}`;
+  return `personalcheck-${datos.anio}-${mesStr}.${extension}`;
 }
 
 function formatearCantidad(cantidad: number, unidad: "dias" | "minutos") {
   const signo = cantidad > 0 ? "+" : "";
   return `${signo}${cantidad} ${unidad === "minutos" ? "min" : "días"}`;
+}
+
+/** "" si el total es 0 — evita imprimir "0 días" en una fila que en
+ * realidad solo tiene minutos (o viceversa). */
+function celdaResumen(total: number, unidad: "dias" | "minutos") {
+  return total === 0 ? "—" : formatearCantidad(total, unidad);
 }
 
 export async function generarPdf(
@@ -63,24 +69,27 @@ export async function generarPdf(
     headStyles: { fillColor: [31, 77, 76] },
   });
 
-  const finTabla =
-    (doc as unknown as { lastAutoTable?: { finalY: number } }).lastAutoTable
-      ?.finalY ?? 32;
+  if (datos.resumen) {
+    const finTabla =
+      (doc as unknown as { lastAutoTable?: { finalY: number } }).lastAutoTable
+        ?.finalY ?? 32;
 
-  doc.setFontSize(12);
-  doc.setTextColor(0);
-  doc.text("Resumen (histórico acumulado)", 14, finTabla + 12);
+    doc.setFontSize(12);
+    doc.setTextColor(0);
+    doc.text("Resumen (histórico acumulado)", 14, finTabla + 12);
 
-  autoTable(doc, {
-    startY: finTabla + 16,
-    head: [["Persona", "Total"]],
-    body: datos.resumen.map((r) => [
-      r.nombre,
-      formatearCantidad(r.total, r.unidad),
-    ]),
-    styles: { fontSize: 8 },
-    headStyles: { fillColor: [31, 77, 76] },
-  });
+    autoTable(doc, {
+      startY: finTabla + 16,
+      head: [["Persona", "Total días", "Total minutos"]],
+      body: datos.resumen.map((r) => [
+        r.nombre,
+        celdaResumen(r.totalDias, "dias"),
+        celdaResumen(r.totalMinutos, "minutos"),
+      ]),
+      styles: { fontSize: 8 },
+      headStyles: { fillColor: [31, 77, 76] },
+    });
+  }
 
   doc.save(nombreArchivo(datos, "pdf"));
 }
@@ -102,18 +111,20 @@ export async function generarExcel(
     })),
   );
 
-  const unidadResumen = datos.resumen[0]?.unidad ?? "dias";
-  const hojaResumen = XLSX.utils.json_to_sheet(
-    datos.resumen.map((r) => ({
-      Persona: r.nombre,
-      [`Total histórico (${unidadResumen === "minutos" ? "minutos" : "días"})`]:
-        r.total,
-    })),
-  );
-
   const libro = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(libro, hojaNovedades, "Novedades");
-  XLSX.utils.book_append_sheet(libro, hojaResumen, "Resumen");
+
+  if (datos.resumen) {
+    const hojaResumen = XLSX.utils.json_to_sheet(
+      datos.resumen.map((r) => ({
+        Persona: r.nombre,
+        "Total histórico (días)": r.totalDias,
+        "Total histórico (minutos)": r.totalMinutos,
+      })),
+    );
+    XLSX.utils.book_append_sheet(libro, hojaResumen, "Resumen");
+  }
+
   XLSX.utils.sheet_add_aoa(
     hojaNovedades,
     [
