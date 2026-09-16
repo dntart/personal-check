@@ -72,3 +72,39 @@ export async function invitarOEncontrarUsuario(
   }
   return { id: encontrado.id, yaExistia: true };
 }
+
+/**
+ * Genera un link de invitación/recuperación válido SIN pasar por el mailer
+ * de Supabase (que tiene un límite muy bajo por defecto — ver historial:
+ * dos supervisores se quedaron con la invitación vencida porque el mail no
+ * volvía a salir por el rate limit compartido). El admin copia este link y
+ * lo manda él mismo por el canal que quiera (WhatsApp, email, lo que sea).
+ *
+ * `type: "invite"` funciona tanto para el primer alta como para "reenviar"
+ * a alguien que ya tiene el registro pendiente sin confirmar — genera un
+ * token nuevo en cualquier caso.
+ */
+export async function generarLinkInvitacion(
+  email: string,
+): Promise<{ link: string } | { error: string }> {
+  const sitio = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+  const redirectTo = `${sitio}/invitacion`;
+
+  const res = await fetch(
+    `${url}/auth/v1/admin/generate_link?redirect_to=${encodeURIComponent(redirectTo)}`,
+    {
+      method: "POST",
+      headers: headers(),
+      body: JSON.stringify({ type: "invite", email, redirect_to: redirectTo }),
+    },
+  );
+
+  const data = await res.json();
+  if (!res.ok || !data.action_link) {
+    return {
+      error:
+        data.msg || data.error_description || "No se pudo generar el link.",
+    };
+  }
+  return { link: data.action_link as string };
+}

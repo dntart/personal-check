@@ -4,7 +4,10 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { obtenerSesion } from "@/lib/supabase/sesion";
 import { registrarAuditoria } from "@/lib/personal/auditoria";
-import { invitarOEncontrarUsuario } from "@/lib/supabase/admin-api";
+import {
+  invitarOEncontrarUsuario,
+  generarLinkInvitacion,
+} from "@/lib/supabase/admin-api";
 import { invitarSupervisorSchema } from "@/lib/validations/supervisores";
 
 export type EstadoSupervisor = { error: string } | null;
@@ -81,6 +84,22 @@ export async function invitarSupervisor(
   });
 
   redirect("/supervisores");
+}
+
+/**
+ * Copiar link de invitación (sin depender del mailer de Supabase — ver
+ * historial: dos supervisores se quedaron con la invitación vencida
+ * porque el reenvío por email pisaba el rate limit compartido del
+ * proyecto). El admin lo manda él mismo por el canal que quiera.
+ */
+export async function obtenerLinkInvitacion(
+  email: string,
+): Promise<{ link: string } | { error: string }> {
+  const sesion = await obtenerSesion();
+  if (!sesion || sesion.tipo !== "admin" || sesion.rol !== "admin") {
+    return { error: "Solo un Admin de organización puede hacer esto." };
+  }
+  return generarLinkInvitacion(email);
 }
 
 /**

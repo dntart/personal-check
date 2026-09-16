@@ -5,6 +5,7 @@ import { obtenerAreas } from "@/lib/personal/data";
 import { obtenerSupervisores } from "@/lib/personal/supervisores";
 import { InvitarSupervisorForm } from "./InvitarSupervisorForm";
 import { EliminarSupervisorButton } from "./EliminarSupervisorButton";
+import { CopiarLinkInvitacion } from "./CopiarLinkInvitacion";
 
 export default async function SupervisoresPage() {
   const sesion = await obtenerSesion();
@@ -28,9 +29,14 @@ export default async function SupervisoresPage() {
       </p>
 
       <section className="mb-8">
-        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide opacity-60">
+        <h2 className="mb-1 text-sm font-semibold uppercase tracking-wide opacity-60">
           Actuales
         </h2>
+        <p className="mb-3 text-xs opacity-60">
+          Si a alguien se le venció la invitación o no le llegó el mail, usá
+          &quot;Copiar link de invitación&quot; y mandaselo vos por otro medio
+          (WhatsApp, etc.) — no depende del correo.
+        </p>
         {supervisores.length === 0 ? (
           <p className="text-sm opacity-70">Todavía no invitaste a nadie.</p>
         ) : (
@@ -49,10 +55,13 @@ export default async function SupervisoresPage() {
                       : "Sin áreas asignadas"}
                   </p>
                 </div>
-                <EliminarSupervisorButton
-                  supervisorId={s.id}
-                  nombre={s.nombre}
-                />
+                <div className="flex flex-col items-end gap-2">
+                  <CopiarLinkInvitacion email={s.email} />
+                  <EliminarSupervisorButton
+                    supervisorId={s.id}
+                    nombre={s.nombre}
+                  />
+                </div>
               </li>
             ))}
           </ul>
