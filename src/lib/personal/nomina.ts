@@ -192,3 +192,39 @@ export function filtrarNomina(
         area.sinHorario.length > 0,
     );
 }
+
+function normalizar(texto: string): string {
+  // Sin tildes ni mayúsculas, así "jose" encuentra a "José".
+  return texto.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
+}
+
+/**
+ * Buscador por nombre en la Nómina (pedido explícito del usuario — no
+ * documentado en el spec original, pero necesario con 39+ personas). Client
+ * side, sobre la nómina ya cargada — no pega contra la base por cada
+ * letra tipeada.
+ */
+export function filtrarPorNombre(
+  areas: AreaNomina[],
+  busqueda: string,
+): AreaNomina[] {
+  const termino = normalizar(busqueda.trim());
+  if (!termino) return areas;
+
+  const cumple = (p: PersonaNomina) => normalizar(p.nombre).includes(termino);
+
+  return areas
+    .map((area) => ({
+      ...area,
+      bloques: area.bloques.map((b) => ({
+        ...b,
+        personas: b.personas.filter(cumple),
+      })),
+      sinHorario: area.sinHorario.filter(cumple),
+    }))
+    .filter(
+      (area) =>
+        area.bloques.some((b) => b.personas.length > 0) ||
+        area.sinHorario.length > 0,
+    );
+}
