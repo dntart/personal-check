@@ -80,9 +80,13 @@ export async function invitarOEncontrarUsuario(
  * volvía a salir por el rate limit compartido). El admin copia este link y
  * lo manda él mismo por el canal que quiera (WhatsApp, email, lo que sea).
  *
- * `type: "invite"` funciona tanto para el primer alta como para "reenviar"
- * a alguien que ya tiene el registro pendiente sin confirmar — genera un
- * token nuevo en cualquier caso.
+ * GoTrue distingue el `type` según si la cuenta ya confirmó el mail o no:
+ * "invite" es para el primer alta (todavía sin confirmar); una vez que el
+ * mail ya está confirmado (por ejemplo, abrió el link de invitación pero
+ * nunca llegó a poner contraseña), hay que pedir "recovery" en su lugar —
+ * "invite" para un mail ya confirmado no sirve para completar el alta. Por
+ * eso siempre resolvemos el tipo correcto acá adentro en vez de asumir uno
+ * fijo (ver historial: esto costó varias idas y vueltas manuales).
  */
 export async function generarLinkInvitacion(
   email: string,
@@ -90,12 +94,26 @@ export async function generarLinkInvitacion(
   const sitio = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
   const redirectTo = `${sitio}/invitacion`;
 
+  const lista = await fetch(`${url}/auth/v1/admin/users?per_page=1000`, {
+    headers: headers(),
+  });
+  if (!lista.ok) {
+    return { error: "No se pudo verificar el estado de la cuenta." };
+  }
+  const { users } = (await lista.json()) as {
+    users: { email: string; email_confirmed_at: string | null }[];
+  };
+  const cuenta = users.find(
+    (u) => u.email?.toLowerCase() === email.toLowerCase(),
+  );
+  const tipo = cuenta?.email_confirmed_at ? "recovery" : "invite";
+
   const res = await fetch(
     `${url}/auth/v1/admin/generate_link?redirect_to=${encodeURIComponent(redirectTo)}`,
     {
       method: "POST",
       headers: headers(),
-      body: JSON.stringify({ type: "invite", email, redirect_to: redirectTo }),
+      body: JSON.stringify({ type: tipo, email, redirect_to: redirectTo }),
     },
   );
 
