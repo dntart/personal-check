@@ -8,7 +8,10 @@ import {
   invitarOEncontrarUsuario,
   generarLinkInvitacion,
 } from "@/lib/supabase/admin-api";
-import { invitarSupervisorSchema } from "@/lib/validations/supervisores";
+import {
+  invitarSupervisorSchema,
+  actualizarAreasSupervisorSchema,
+} from "@/lib/validations/supervisores";
 
 export type EstadoSupervisor = { error: string } | null;
 
@@ -100,6 +103,75 @@ export async function obtenerLinkInvitacion(
     return { error: "Solo un Admin de organización puede hacer esto." };
   }
   return generarLinkInvitacion(email);
+}
+
+/**
+ * Editar qué áreas ve un supervisor ya existente (spec sección 3). Sin esto,
+ * la única forma de sumarle un área nueva a alguien era sacarlo y volver a
+ * invitarlo — perdía el link de invitación ya usado y tenía que crear
+ * contraseña de nuevo por las dudas. Reemplaza directamente el set de
+ * admin_areas (borra y vuelve a insertar) en vez de diffear altas/bajas: es
+ * una tabla chica, y así no hay que resolver casos raros de qué cambió.
+ */
+export async function actualizarAreasSupervisor(
+  supervisorId: string,
+  _estadoPrevio: EstadoSupervisor,
+  formData: FormData,
+): Promise<EstadoSupervisor> {
+  const sesion = await obtenerSesion();
+  if (!sesion || sesion.tipo !== "admin" || sesion.rol !== "admin") {
+    return {
+      error: "Solo un Admin de organización puede editar supervisores.",
+    };
+  }
+
+  const parsed = actualizarAreasSupervisorSchema.safeParse({
+    areaIds: formData.getAll("areaIds"),
+  });
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Datos inválidos." };
+  }
+
+  const supabase = await createClient();
+
+  const { data: supervisor } = await supabase
+    .from("admins")
+    .select("id, nombre, admin_areas(area_id)")
+    .eq("id", supervisorId)
+    .eq("rol", "supervisor")
+    .maybeSingle();
+
+  if (!supervisor) return { error: "No se encontró ese supervisor." };
+
+  const areasAnteriores = (
+    supervisor.admin_areas as unknown as { area_id: string }[]
+  ).map((a) => a.area_id);
+
+  const { error: errorBorrar } = await supabase
+    .from("admin_areas")
+    .delete()
+    .eq("admin_id", supervisorId);
+  if (errorBorrar) return { error: "No se pudieron actualizar las áreas." };
+
+  const { error: errorInsertar } = await supabase.from("admin_areas").insert(
+    parsed.data.areaIds.map((areaId) => ({
+      admin_id: supervisorId,
+      area_id: areaId,
+    })),
+  );
+  if (errorInsertar) return { error: "No se pudieron actualizar las áreas." };
+
+  await registrarAuditoria(supabase, {
+    organizacionId: sesion.organizacionId,
+    adminId: sesion.id,
+    accion: "editar",
+    entidad: "admin",
+    entidadId: supervisorId,
+    datosAnteriores: { areaIds: areasAnteriores },
+    datosNuevos: { areaIds: parsed.data.areaIds },
+  });
+
+  redirect("/supervisores");
 }
 
 /**

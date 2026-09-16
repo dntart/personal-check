@@ -5,3 +5,7 @@ export const invitarSupervisorSchema = z.object({
   email: z.email("Ingresá un email válido"),
   areaIds: z.array(z.string().uuid()).min(1, "Elegí al menos un área"),
 });
+
+export const actualizarAreasSupervisorSchema = z.object({
+  areaIds: z.array(z.string().uuid()).min(1, "Elegí al menos un área"),
+});

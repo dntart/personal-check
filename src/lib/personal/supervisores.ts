@@ -1,11 +1,13 @@
 import "server-only";
 import { createClient } from "@/lib/supabase/server";
 
+export type Area = { id: string; nombre: string };
+
 export type Supervisor = {
   id: string;
   nombre: string;
   email: string;
-  areas: { id: string; nombre: string }[];
+  areas: Area[];
 };
 
 export async function obtenerSupervisores(): Promise<Supervisor[]> {

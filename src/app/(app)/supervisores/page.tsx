@@ -6,6 +6,7 @@ import { obtenerSupervisores } from "@/lib/personal/supervisores";
 import { InvitarSupervisorForm } from "./InvitarSupervisorForm";
 import { EliminarSupervisorButton } from "./EliminarSupervisorButton";
 import { CopiarLinkInvitacion } from "./CopiarLinkInvitacion";
+import { EditarAreasSupervisor } from "./EditarAreasSupervisor";
 
 export default async function SupervisoresPage() {
   const sesion = await obtenerSesion();
@@ -57,6 +58,11 @@ export default async function SupervisoresPage() {
                 </div>
                 <div className="flex flex-col items-end gap-2">
                   <CopiarLinkInvitacion email={s.email} />
+                  <EditarAreasSupervisor
+                    supervisorId={s.id}
+                    areas={areas}
+                    areaIdsActuales={s.areas.map((a) => a.id)}
+                  />
                   <EliminarSupervisorButton
                     supervisorId={s.id}
                     nombre={s.nombre}
