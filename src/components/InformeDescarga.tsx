@@ -27,6 +27,14 @@ const TIPOS_ESPECIFICOS: { codigo: string; label: string }[] = [
   { codigo: "falta_justificada", label: "Falta justificada" },
   { codigo: "tardanza_injustificada", label: "Tardanza injustificada" },
   { codigo: "tardanza_justificada", label: "Tardanza justificada" },
+  {
+    codigo: "salida_anticipada_injustificada",
+    label: "Salida anticipada injustificada",
+  },
+  {
+    codigo: "salida_anticipada_justificada",
+    label: "Salida anticipada justificada",
+  },
 ];
 
 function ultimos12Meses() {

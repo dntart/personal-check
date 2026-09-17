@@ -91,15 +91,28 @@ El saldo de cada persona **nunca se calcula a partir del reloj de fichaje**. Se 
 
 **Catálogo fijo de tipos de movimiento**:
 
-| Tipo                     | Unidad      | Efecto en el saldo (días)                                              | Requiere adjunto                                                                                                       |
-| ------------------------ | ----------- | ---------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
-| Falta injustificada      | Días        | Resta                                                                  | No                                                                                                                     |
-| Falta justificada        | Días        | **Neutro — no suma ni resta** (queda solo registrada, con certificado) | **Sí, obligatorio** — TEMPORAL: desactivado desde 2026-09-17 (a pedido de Dante), no bloquea la carga; ver nota debajo |
-| Día/hora extra trabajado | Días        | Suma                                                                   | No                                                                                                                     |
-| Día compensado tomado    | Días        | Resta                                                                  | No                                                                                                                     |
-| Ajuste manual            | Días        | Variable — el signo lo define el admin al cargar la cantidad           | No                                                                                                                     |
-| Tardanza injustificada   | **Minutos** | **Siempre neutro — nunca toca el saldo en días**                       | No                                                                                                                     |
-| Tardanza justificada     | **Minutos** | **Siempre neutro — nunca toca el saldo en días**                       | No                                                                                                                     |
+| Tipo                            | Unidad                      | Efecto en el saldo (días)                                              | Requiere adjunto                                                                                                       |
+| ------------------------------- | --------------------------- | ---------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| Falta injustificada             | Días                        | Resta                                                                  | No                                                                                                                     |
+| Falta justificada               | Días                        | **Neutro — no suma ni resta** (queda solo registrada, con certificado) | **Sí, obligatorio** — TEMPORAL: desactivado desde 2026-09-17 (a pedido de Dante), no bloquea la carga; ver nota debajo |
+| Día/hora extra trabajado        | Días                        | Suma                                                                   | No                                                                                                                     |
+| Día compensado tomado           | Días                        | Resta                                                                  | No                                                                                                                     |
+| Ajuste manual                   | Días                        | Variable — el signo lo define el admin al cargar la cantidad           | No                                                                                                                     |
+| Tardanza injustificada          | **Minutos**                 | **Siempre neutro — nunca toca el saldo en días**                       | No                                                                                                                     |
+| Tardanza justificada            | **Minutos**                 | **Siempre neutro — nunca toca el saldo en días**                       | No                                                                                                                     |
+| Salida anticipada injustificada | **Minutos** (bloques de 30) | **Siempre neutro — nunca toca el saldo en días**                       | No                                                                                                                     |
+| Salida anticipada justificada   | **Minutos** (bloques de 30) | **Siempre neutro — nunca toca el saldo en días**                       | No                                                                                                                     |
+
+> **AGREGADO 2026-09-17** — caso real: una persona pide permiso para
+> retirarse antes por fuerza mayor (enfermedad, urgencia) y ficha la salida
+> anticipada — el reloj biométrico marca menos horas de las que corresponden.
+> No encajaba en ningún tipo existente: "Falta justificada" es para un día
+> entero de ausencia (la persona no vino), no para quien vino y se retiró
+> antes; "Tardanza" es el otro extremo del turno. Mismo patrón que
+> tardanza_injustificada/justificada — neutro, solo registro/respaldo (el
+> sistema nunca descuenta por el reloj automáticamente, sección 1). Se carga
+> en bloques de 30 minutos (30, 60, 90…) en vez de minuto a minuto, a pedido
+> de Dante, porque en la práctica los permisos se dan en medias horas.
 
 > **TEMPORAL 2026-09-17** — el adjunto obligatorio de "Falta justificada" está
 > desactivado en el código (`cargarNovedad`, `src/app/(app)/personal/[id]/novedad/actions.ts`,

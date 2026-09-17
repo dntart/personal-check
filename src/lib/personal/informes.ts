@@ -209,5 +209,7 @@ const LABELS_POR_CODIGO: Record<string, string> = {
   falta_justificada: "Falta justificada",
   tardanza_injustificada: "Tardanza injustificada",
   tardanza_justificada: "Tardanza justificada",
+  salida_anticipada_injustificada: "Salida anticipada injustificada",
+  salida_anticipada_justificada: "Salida anticipada justificada",
   ajuste_manual: "Ajuste manual",
 };

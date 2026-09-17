@@ -45,6 +45,8 @@ proyecto compartido del portfolio):
 8. `20260915_personalcheck_tardanza_justificada.sql` — separa Tardanza en
    injustificada/justificada (decisión de negocio que reemplaza a la
    original del spec)
+9. `20260917_personalcheck_salida_anticipada.sql` — agrega Salida
+   anticipada injustificada/justificada (mismo patrón que Tardanza)
 
 Además, en **Project Settings > Data API**, el schema `personalcheck` y sus
 10 tablas tienen que estar tildados en "Exposed schemas" / "Exposed tables"

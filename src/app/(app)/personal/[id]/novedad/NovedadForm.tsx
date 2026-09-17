@@ -5,6 +5,7 @@ import { cargarNovedad, type EstadoNovedad } from "./actions";
 
 type Tipo = {
   id: string;
+  codigo: string;
   nombre: string;
   unidad: string;
   requiere_adjunto: boolean;
@@ -26,6 +27,8 @@ export function NovedadForm({
   const [tipoId, setTipoId] = useState(tipos[0]?.id ?? "");
   const tipoSeleccionado = tipos.find((t) => t.id === tipoId);
   const esMinutos = tipoSeleccionado?.unidad === "minutos";
+  const esSalidaAnticipada =
+    tipoSeleccionado?.codigo.startsWith("salida_anticipada");
 
   return (
     <form action={formAction} className="flex flex-col gap-4">
@@ -64,17 +67,27 @@ export function NovedadForm({
 
       <div className="flex flex-col gap-1.5">
         <label htmlFor="cantidad" className="text-sm font-medium">
-          {esMinutos ? "Minutos de tardanza" : "Cantidad (± días)"}
+          {esSalidaAnticipada
+            ? "Minutos de salida anticipada"
+            : esMinutos
+              ? "Minutos de tardanza"
+              : "Cantidad (± días)"}
         </label>
         <input
+          key={tipoId}
           id="cantidad"
           name="cantidad"
           type="number"
-          step={esMinutos ? 1 : 0.5}
+          step={esSalidaAnticipada ? 30 : esMinutos ? 1 : 0.5}
           required
-          defaultValue={esMinutos ? 10 : 1}
+          defaultValue={esSalidaAnticipada ? 30 : esMinutos ? 10 : 1}
           className="rounded-sm border border-borde bg-superficie px-3 py-2 text-sm font-mono outline-none focus:border-acento"
         />
+        {esSalidaAnticipada && (
+          <p className="text-xs opacity-60">
+            Se carga en bloques de 30 minutos (30, 60, 90…).
+          </p>
+        )}
         {!esMinutos && tipoSeleccionado?.nombre === "Ajuste manual" && (
           <p className="text-xs opacity-60">
             Podés cargar un número negativo para que reste del saldo.
