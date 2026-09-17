@@ -89,11 +89,16 @@ export async function invitarOEncontrarUsuario(
  * fijo (ver historial: esto costó varias idas y vueltas manuales).
  *
  * El link que se devuelve NO apunta directo al endpoint de Supabase que
- * verifica el token — apunta a /completar-invitacion, una página propia
- * que no gasta nada al abrirse sola. Si apuntara directo, apps de chat
- * como WhatsApp lo "gastan" solas al armar la vista previa del link en
- * el momento de pegarlo, antes de que la persona lo toque (ver historial:
- * así se murieron en silencio los links de Yamila, Ada y Diego).
+ * verifica el token — apunta a /completar-invitacion, una página propia.
+ * Y el token va en el FRAGMENTO de la URL (#token=...), no en la query
+ * string (?token=...): un fragmento nunca se manda al servidor — ningún
+ * rastreador ni scanner de links (WhatsApp armando la vista previa, un
+ * antivirus corporativo, etc.) puede verlo jamás, solo JavaScript
+ * corriendo en un navegador real después de que la persona lo abre. Es
+ * el patrón que la propia documentación de Supabase/GoTrue recomienda
+ * para este problema exacto (ver historial: así se murieron en silencio
+ * los links de Yamila, Ada y Diego — con el token en la query string,
+ * cualquier GET automático a la página ya alcanzaba para exponerlo).
  */
 export async function generarLinkInvitacion(
   email: string,
@@ -132,7 +137,7 @@ export async function generarLinkInvitacion(
     };
   }
   const link =
-    `${sitio}/completar-invitacion?token=${encodeURIComponent(data.hashed_token)}` +
+    `${sitio}/completar-invitacion#token=${encodeURIComponent(data.hashed_token)}` +
     `&type=${encodeURIComponent(data.verification_type ?? tipo)}`;
   return { link };
 }
