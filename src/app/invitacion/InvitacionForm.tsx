@@ -4,12 +4,24 @@ import { useEffect, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
+const ERROR_LINK =
+  "El link de invitación no es válido o ya expiró. Pedile a tu Admin que te invite de nuevo.";
+
 /**
- * Completa la invitación: el link del mail (GoTrue) trae la sesión en el
- * fragmento de la URL (#access_token=...) — el navegador no se lo manda al
- * servidor, así que esto tiene que resolverse acá, en el cliente. El
- * cliente de @supabase/ssr detecta ese fragmento solo (detectSessionInUrl)
- * y persiste la sesión en cookies.
+ * Completa la invitación: el link de GoTrue trae la sesión en el fragmento
+ * de la URL (#access_token=...&refresh_token=...) — el navegador nunca
+ * manda eso al servidor, así que se resuelve acá, en el cliente.
+ *
+ * OJO: NO alcanza con supabase.auth.getSession() y esperar a que el cliente
+ * la detecte solo. @supabase/ssr fuerza flowType "pkce" en createBrowserClient
+ * (no se puede pisar por opciones — ver node_modules/@supabase/ssr/dist/main/
+ * createBrowserClient.js), y en modo pkce el cliente busca un `?code=` en la
+ * URL, no un `#access_token=` — el formato que en realidad devuelven los
+ * links de invite/recovery generados por la Admin API. Con getSession() a
+ * secas, la sesión quedaba creada del lado del servidor pero el cliente
+ * nunca la enteraba, y esta pantalla mostraba "inválido" siempre — pasó con
+ * cada supervisor invitado (ver historial). El fix es leer el hash a mano y
+ * pisar la sesión con setSession(), que no depende del flujo configurado.
  */
 export function InvitacionForm() {
   const router = useRouter();
@@ -19,12 +31,29 @@ export function InvitacionForm() {
   const [guardando, setGuardando] = useState(false);
 
   useEffect(() => {
-    const supabase = createClient();
-    supabase.auth.getSession().then(({ data, error: err }) => {
-      if (err || !data.session) {
-        setError(
-          "El link de invitación no es válido o ya expiró. Pedile a tu Admin que te invite de nuevo.",
-        );
+    Promise.resolve().then(async () => {
+      const hash = new URLSearchParams(window.location.hash.slice(1));
+      const accessToken = hash.get("access_token");
+      const refreshToken = hash.get("refresh_token");
+
+      if (!accessToken || !refreshToken) {
+        setError(ERROR_LINK);
+        setCargando(false);
+        return;
+      }
+
+      const supabase = createClient();
+      const { error: err } = await supabase.auth.setSession({
+        access_token: accessToken,
+        refresh_token: refreshToken,
+      });
+
+      // Limpiamos el hash de la URL: son tokens sensibles, no tienen que
+      // quedar visibles en la barra de direcciones ni en el historial.
+      window.history.replaceState(null, "", window.location.pathname);
+
+      if (err) {
+        setError(ERROR_LINK);
       }
       setCargando(false);
     });
