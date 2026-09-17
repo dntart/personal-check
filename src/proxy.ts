@@ -38,7 +38,8 @@ export async function proxy(request: NextRequest) {
 
   const isPublicRoute =
     request.nextUrl.pathname.startsWith("/login") ||
-    request.nextUrl.pathname.startsWith("/invitacion");
+    request.nextUrl.pathname.startsWith("/invitacion") ||
+    request.nextUrl.pathname.startsWith("/completar-invitacion");
 
   if (!user && !isPublicRoute) {
     const loginUrl = new URL("/login", request.url);
