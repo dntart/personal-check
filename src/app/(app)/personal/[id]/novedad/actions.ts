@@ -48,11 +48,18 @@ export async function cargarNovedad(
   if (!tipo) return { error: "Tipo de novedad inválido." };
 
   const adjuntoUrl = String(formData.get("adjuntoUrl") ?? "").trim() || null;
-  if (tipo.requiere_adjunto && !adjuntoUrl) {
-    return {
-      error: `"${tipo.nombre}" requiere adjuntar el justificativo (por ahora, pegá el link de la foto ya subida — el upload directo todavía no está implementado).`,
-    };
-  }
+  // TEMPORAL (2026-09-17, a pedido explícito de Dante): el bucket de
+  // Supabase Storage para las fotos de justificativo todavía no existe, así
+  // que exigir el adjunto acá bloqueaba cargar faltas/tardanzas justificadas
+  // sin ninguna forma de cumplir el requisito. Se vuelve a exigir
+  // (descomentando esto) en cuanto el upload de fotos esté implementado —
+  // ver docs/PERSONALCHECK-SPEC.md sección 5, nota "TEMPORAL".
+  //
+  // if (tipo.requiere_adjunto && !adjuntoUrl) {
+  //   return {
+  //     error: `"${tipo.nombre}" requiere adjuntar el justificativo (por ahora, pegá el link de la foto ya subida — el upload directo todavía no está implementado).`,
+  //   };
+  // }
 
   const { data: movimiento, error } = await supabase
     .from("movimientos")

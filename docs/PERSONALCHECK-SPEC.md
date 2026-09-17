@@ -91,15 +91,26 @@ El saldo de cada persona **nunca se calcula a partir del reloj de fichaje**. Se 
 
 **Catálogo fijo de tipos de movimiento**:
 
-| Tipo                     | Unidad      | Efecto en el saldo (días)                                              | Requiere adjunto    |
-| ------------------------ | ----------- | ---------------------------------------------------------------------- | ------------------- |
-| Falta injustificada      | Días        | Resta                                                                  | No                  |
-| Falta justificada        | Días        | **Neutro — no suma ni resta** (queda solo registrada, con certificado) | **Sí, obligatorio** |
-| Día/hora extra trabajado | Días        | Suma                                                                   | No                  |
-| Día compensado tomado    | Días        | Resta                                                                  | No                  |
-| Ajuste manual            | Días        | Variable — el signo lo define el admin al cargar la cantidad           | No                  |
-| Tardanza injustificada   | **Minutos** | **Siempre neutro — nunca toca el saldo en días**                       | No                  |
-| Tardanza justificada     | **Minutos** | **Siempre neutro — nunca toca el saldo en días**                       | No                  |
+| Tipo                     | Unidad      | Efecto en el saldo (días)                                              | Requiere adjunto                                                                                                       |
+| ------------------------ | ----------- | ---------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| Falta injustificada      | Días        | Resta                                                                  | No                                                                                                                     |
+| Falta justificada        | Días        | **Neutro — no suma ni resta** (queda solo registrada, con certificado) | **Sí, obligatorio** — TEMPORAL: desactivado desde 2026-09-17 (a pedido de Dante), no bloquea la carga; ver nota debajo |
+| Día/hora extra trabajado | Días        | Suma                                                                   | No                                                                                                                     |
+| Día compensado tomado    | Días        | Resta                                                                  | No                                                                                                                     |
+| Ajuste manual            | Días        | Variable — el signo lo define el admin al cargar la cantidad           | No                                                                                                                     |
+| Tardanza injustificada   | **Minutos** | **Siempre neutro — nunca toca el saldo en días**                       | No                                                                                                                     |
+| Tardanza justificada     | **Minutos** | **Siempre neutro — nunca toca el saldo en días**                       | No                                                                                                                     |
+
+> **TEMPORAL 2026-09-17** — el adjunto obligatorio de "Falta justificada" está
+> desactivado en el código (`cargarNovedad`, `src/app/(app)/personal/[id]/novedad/actions.ts`,
+> validación comentada, no borrada) porque todavía no existe el bucket de
+> Supabase Storage para subir fotos — exigirlo sin tener dónde cargar la
+> imagen bloqueaba cargar la novedad por completo. A pedido explícito de
+> Dante: "permitamos por el momento avanzar con la carga sin poner como
+> condición fotografía del certificado. ya luego lo modificaremos". Volver a
+> exigirlo (descomentar) en cuanto el upload de fotos esté implementado —
+> esto NO cambia la decisión de negocio de que sigue siendo obligatorio en
+> el diseño, solo que no se puede hacer cumplir todavía.
 
 > **ACTUALIZADO 2026-09-15** — esto reemplaza la decisión de más abajo que
 > decía "no volver a preguntar". Caso real: el personal a veces ficha tarde

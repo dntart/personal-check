@@ -96,10 +96,7 @@ export function NovedadForm({
 
       <div className="flex flex-col gap-1.5">
         <label htmlFor="adjuntoUrl" className="text-sm font-medium">
-          Adjunto (link a la foto){" "}
-          {tipoSeleccionado?.requiere_adjunto && (
-            <span className="text-negativo">— obligatorio</span>
-          )}
+          Adjunto (link a la foto)
         </label>
         <input
           id="adjuntoUrl"
@@ -109,8 +106,11 @@ export function NovedadForm({
           className="rounded-sm border border-borde bg-superficie px-3 py-2 text-sm outline-none focus:border-acento"
         />
         <p className="text-xs opacity-60">
-          El upload directo de la foto todavía no está implementado — por ahora,
-          subila a otro lado (Drive, WhatsApp Web, etc.) y pegá el link acá.
+          {tipoSeleccionado?.requiere_adjunto
+            ? "Por ahora es opcional (todavía no hay dónde guardar fotos) — se va a pedir de vuelta cuando esté disponible."
+            : "El upload directo de la foto todavía no está implementado — por ahora,"}{" "}
+          {!tipoSeleccionado?.requiere_adjunto &&
+            "subila a otro lado (Drive, WhatsApp Web, etc.) y pegá el link acá."}
         </p>
       </div>
 
