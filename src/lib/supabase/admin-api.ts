@@ -87,6 +87,13 @@ export async function invitarOEncontrarUsuario(
  * "invite" para un mail ya confirmado no sirve para completar el alta. Por
  * eso siempre resolvemos el tipo correcto acá adentro en vez de asumir uno
  * fijo (ver historial: esto costó varias idas y vueltas manuales).
+ *
+ * El link que se devuelve NO apunta directo al endpoint de Supabase que
+ * verifica el token — apunta a /completar-invitacion, una página propia
+ * que no gasta nada al abrirse sola. Si apuntara directo, apps de chat
+ * como WhatsApp lo "gastan" solas al armar la vista previa del link en
+ * el momento de pegarlo, antes de que la persona lo toque (ver historial:
+ * así se murieron en silencio los links de Yamila, Ada y Diego).
  */
 export async function generarLinkInvitacion(
   email: string,
@@ -118,11 +125,14 @@ export async function generarLinkInvitacion(
   );
 
   const data = await res.json();
-  if (!res.ok || !data.action_link) {
+  if (!res.ok || !data.hashed_token) {
     return {
       error:
         data.msg || data.error_description || "No se pudo generar el link.",
     };
   }
-  return { link: data.action_link as string };
+  const link =
+    `${sitio}/completar-invitacion?token=${encodeURIComponent(data.hashed_token)}` +
+    `&type=${encodeURIComponent(data.verification_type ?? tipo)}`;
+  return { link };
 }
