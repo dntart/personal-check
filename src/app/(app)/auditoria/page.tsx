@@ -74,7 +74,7 @@ export default async function AuditoriaPage({
                   {FORMATO_FECHA.format(new Date(f.createdAt))}
                 </span>
               </div>
-              {f.accion === "eliminar" &&
+              {(f.accion === "eliminar" || f.accion === "editar") &&
                 typeof f.datosNuevos === "object" &&
                 f.datosNuevos !== null &&
                 "motivo" in f.datosNuevos && (

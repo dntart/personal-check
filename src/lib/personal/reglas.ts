@@ -31,6 +31,18 @@ export function formatearHora(hora: string): string {
 }
 
 /**
+ * "2026-09-18" -> "18/09/2026" (a pedido de Dante: día-mes-año, no
+ * año-mes-día). A propósito NO pasa por `new Date(...)`: una fecha pura sin
+ * hora, parseada como Date, se interpreta en UTC y al formatearla en la
+ * zona horaria local puede mostrar el día anterior — manipulación de
+ * string directa, sin ese riesgo.
+ */
+export function formatearFecha(fecha: string): string {
+  const [anio, mes, dia] = fecha.split("-");
+  return `${dia}/${mes}/${anio}`;
+}
+
+/**
  * Efecto de un movimiento sobre el saldo en días (spec sección 5).
  * - suma: se suma la cantidad tal cual (incluye ajuste_manual, donde el
  *   admin ya carga el signo en `cantidad`)

@@ -3,6 +3,7 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { CampoContrasena } from "@/components/CampoContrasena";
 
 const ERROR_LINK =
   "El link de invitación no es válido o ya expiró. Pedile a tu Admin que te invite de nuevo.";
@@ -98,9 +99,8 @@ export function InvitacionForm() {
         <label htmlFor="password" className="text-sm font-medium">
           Elegí una contraseña
         </label>
-        <input
+        <CampoContrasena
           id="password"
-          type="password"
           required
           minLength={6}
           autoComplete="new-password"

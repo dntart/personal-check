@@ -2,6 +2,7 @@
 // "PDF client-side (jsPDF, como en el prototipo)"). Los imports de jsPDF/
 // xlsx son dinámicos para no meterlos en el bundle inicial de cada página.
 import type { DatosInforme } from "./informes";
+import { formatearFecha } from "./reglas";
 
 export const NOMBRE_MES = [
   "Enero",
@@ -54,7 +55,7 @@ export async function generarPdf(
   doc.text(subtitulo, 14, 25);
 
   const filasMovimientos = datos.movimientos.map((m) => [
-    m.fecha,
+    formatearFecha(m.fecha),
     m.operarioNombre,
     m.tipoNombre,
     formatearCantidad(m.cantidad, m.tipoUnidad),
@@ -102,7 +103,7 @@ export async function generarExcel(
 
   const hojaNovedades = XLSX.utils.json_to_sheet(
     datos.movimientos.map((m) => ({
-      Fecha: m.fecha,
+      Fecha: formatearFecha(m.fecha),
       Persona: m.operarioNombre,
       Tipo: m.tipoNombre,
       Cantidad: m.cantidad,

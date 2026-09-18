@@ -2,6 +2,7 @@
 
 import { useActionState } from "react";
 import { login } from "./actions";
+import { CampoContrasena } from "@/components/CampoContrasena";
 
 export function LoginForm() {
   const [estado, formAction, enviando] = useActionState(login, null);
@@ -26,10 +27,9 @@ export function LoginForm() {
         <label htmlFor="password" className="text-sm font-medium">
           Contraseña
         </label>
-        <input
+        <CampoContrasena
           id="password"
           name="password"
-          type="password"
           autoComplete="current-password"
           required
           className="rounded-sm border border-borde bg-superficie px-3 py-2 text-sm outline-none focus:border-acento"

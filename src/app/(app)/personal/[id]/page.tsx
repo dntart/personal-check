@@ -2,7 +2,11 @@ import { redirect, notFound } from "next/navigation";
 import Link from "next/link";
 import { obtenerSesion } from "@/lib/supabase/sesion";
 import { obtenerFichaPersonal } from "@/lib/personal/data";
-import { DIAS_SEMANA, formatearHora } from "@/lib/personal/reglas";
+import {
+  DIAS_SEMANA,
+  formatearHora,
+  formatearFecha,
+} from "@/lib/personal/reglas";
 
 export default async function FichaPersonalPage({
   params,
@@ -129,7 +133,9 @@ export default async function FichaPersonalPage({
                 >
                   <div className="flex flex-wrap items-baseline justify-between gap-2">
                     <span className="font-medium">{tipo?.nombre}</span>
-                    <span className="font-mono opacity-70">{m.fecha}</span>
+                    <span className="font-mono opacity-70">
+                      {formatearFecha(m.fecha)}
+                    </span>
                   </div>
                   <p className="mt-1 font-mono">
                     {m.cantidad} {tipo?.unidad === "minutos" ? "min" : "días"}

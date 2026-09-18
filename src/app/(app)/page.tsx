@@ -6,6 +6,7 @@ import {
   obtenerUltimasNovedades,
 } from "@/lib/personal/data";
 import { InformeDescarga } from "@/components/InformeDescarga";
+import { formatearFecha } from "@/lib/personal/reglas";
 
 const FORMATO_FECHA = new Intl.DateTimeFormat("es-AR", {
   day: "numeric",
@@ -115,7 +116,7 @@ export default async function DashboardPage() {
                         {n.observaciones ? ` — ${n.observaciones}` : ""}
                       </td>
                       <td className="whitespace-nowrap px-3 py-2 text-right font-mono opacity-60">
-                        {n.fecha}
+                        {formatearFecha(n.fecha)}
                       </td>
                     </tr>
                   ))}
