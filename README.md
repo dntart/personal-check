@@ -51,6 +51,13 @@ proyecto compartido del portfolio):
     Anual Ordinaria (neutra, no toca el banco de días compensatorio)
 11. `20260918_personalcheck_cambio_dia_y_horario.sql` — agrega Cambio de
     día y Cambio de horario (avisos, no movimientos de saldo)
+12. `20260918_personalcheck_cambio_horario_minutos.sql` — corrige la unidad
+    de Cambio de horario a minutos (igual que Tardanza)
+13. `20260918_personalcheck_auditoria_escritura_supervisor.sql` — **no te
+    la saltees**: corrige un bug real donde un Supervisor no podía escribir
+    en Auditoría (solo se había restringido lectura por error, la policy
+    también bloqueaba el INSERT) — sin esto, ninguna acción de un
+    Supervisor queda en el historial
 
 Además, en **Project Settings > Data API**, el schema `personalcheck` y sus
 10 tablas tienen que estar tildados en "Exposed schemas" / "Exposed tables"

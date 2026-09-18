@@ -29,6 +29,7 @@ export function NovedadForm({
   const esMinutos = tipoSeleccionado?.unidad === "minutos";
   const esSalidaAnticipada =
     tipoSeleccionado?.codigo.startsWith("salida_anticipada");
+  const esCambioHorario = tipoSeleccionado?.codigo === "cambio_horario";
 
   return (
     <form action={formAction} className="flex flex-col gap-4">
@@ -69,9 +70,11 @@ export function NovedadForm({
         <label htmlFor="cantidad" className="text-sm font-medium">
           {esSalidaAnticipada
             ? "Minutos de salida anticipada"
-            : esMinutos
-              ? "Minutos de tardanza"
-              : "Cantidad (± días)"}
+            : esCambioHorario
+              ? "Minutos de cambio de horario"
+              : esMinutos
+                ? "Minutos de tardanza"
+                : "Cantidad (± días)"}
         </label>
         <input
           key={tipoId}

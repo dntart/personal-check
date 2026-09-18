@@ -48,6 +48,7 @@ export function EditarNovedadForm({
   const esSalidaAnticipada = Boolean(
     tipoSeleccionado?.codigo.startsWith("salida_anticipada"),
   );
+  const esCambioHorario = tipoSeleccionado?.codigo === "cambio_horario";
 
   // Si todavía es el mismo tipo que ya tenía cargado, mantenemos la
   // cantidad tal cual estaba — si cambió a otro tipo, un valor por defecto
@@ -96,9 +97,11 @@ export function EditarNovedadForm({
         <label htmlFor="cantidad" className="text-sm font-medium">
           {esSalidaAnticipada
             ? "Minutos de salida anticipada"
-            : esMinutos
-              ? "Minutos de tardanza"
-              : "Cantidad (± días)"}
+            : esCambioHorario
+              ? "Minutos de cambio de horario"
+              : esMinutos
+                ? "Minutos de tardanza"
+                : "Cantidad (± días)"}
         </label>
         <input
           key={tipoId}

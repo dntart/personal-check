@@ -25,7 +25,7 @@ export async function registrarAuditoria(
     datosNuevos?: unknown;
   },
 ) {
-  await supabase.from("auditoria").insert({
+  const { error } = await supabase.from("auditoria").insert({
     organizacion_id: params.organizacionId,
     admin_id: params.adminId ?? null,
     super_admin_id: params.superAdminId ?? null,
@@ -35,4 +35,15 @@ export async function registrarAuditoria(
     datos_anteriores: (params.datosAnteriores ?? null) as Json,
     datos_nuevos: (params.datosNuevos ?? null) as Json,
   });
+
+  // No revisar este error dejó pasar en silencio un bug real: una policy de
+  // RLS mal armada bloqueaba el INSERT de un Supervisor sin que nadie se
+  // enterara — la acción se guardaba bien, pero nunca quedaba en Auditoría
+  // (ver migración 20260918_personalcheck_auditoria_escritura_supervisor.sql).
+  // No relanzamos el error para no romper la acción principal (cargar la
+  // novedad, etc.) por un problema del log — pero al menos queda en los
+  // logs del servidor para poder notarlo.
+  if (error) {
+    console.error("No se pudo registrar en auditoría:", error);
+  }
 }

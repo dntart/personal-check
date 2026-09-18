@@ -104,7 +104,7 @@ El saldo de cada persona **nunca se calcula a partir del reloj de fichaje**. Se 
 | Salida anticipada justificada   | **Minutos** (bloques de 30) | **Siempre neutro — nunca toca el saldo en días**                       | No                                                                                                                     |
 | Licencia Anual Ordinaria        | Días                        | **Neutro — no suma ni resta** (banco compensatorio es otra cuenta)     | No                                                                                                                     |
 | Cambio de día                   | Días                        | **Neutro — no suma ni resta** (aviso, no movimiento de saldo)          | No                                                                                                                     |
-| Cambio de horario               | Días                        | **Neutro — no suma ni resta** (aviso, no movimiento de saldo)          | No                                                                                                                     |
+| Cambio de horario               | **Minutos**                 | **Neutro — no suma ni resta** (aviso, no movimiento de saldo)          | No                                                                                                                     |
 
 > **AGREGADO 2026-09-18** — "Cambio de día" y "Cambio de horario" son
 > avisos, no movimientos de saldo: "Cambio de día" es cuando alguien se
@@ -113,7 +113,9 @@ El saldo de cada persona **nunca se calcula a partir del reloj de fichaje**. Se 
 > "Día compensado tomado", que sí resta porque ahí se usa un día ya
 > acumulado a favor). "Cambio de horario" es cuando alguien de un turno fijo
 > (ej. tarde) entra en el otro turno (ej. mañana) por un trabajo puntual —
-> se deja asentado el motivo, sin implicar ninguna falta ni ajuste.
+> se deja asentado el motivo, sin implicar ninguna falta ni ajuste. Su
+> unidad se corrigió a **minutos** (igual que Tardanza) a pedido de Dante —
+> originalmente se había cargado en días.
 
 > **AGREGADO 2026-09-18** — Licencia Anual Ordinaria (vacaciones
 > reglamentarias): a diferencia del resto del catálogo, no es una novedad
@@ -194,7 +196,7 @@ Ver el prototipo para el detalle visual exacto. Resumen funcional:
    1. **AGREGADO 2026-09-18 — Corregir novedad**: mismo formulario que cargar, precargado con los valores actuales, más un **motivo obligatorio** de la corrección (no se guarda en la novedad, solo en Auditoría junto al valor anterior y el nuevo — accion `editar`, entidad `movimiento`). Mismo permiso que cargar novedad (Admin de Organización **o** Supervisor, a diferencia de "Eliminar personal" que es solo Admin) — el supervisor es quien más carga novedades día a día, tiene sentido que corrija sus propios errores de tipeo.
 6. **Editar horario** — por día de la semana; genera una nueva versión vigente y cierra la anterior
 7. **Eliminar personal** — pide un **motivo obligatorio** antes de confirmar (ej. "cargado por error, es duplicado de otra persona"); no es un borrado silencioso — queda registrado en Auditoría con quién lo hizo y por qué. Distinto conceptualmente de una "baja" por fin de relación laboral, que en el modelo real debería conservar el historial (ver nota en la sección 4, tabla `operarios`). **ACTUALIZADO 2026-09-18**: solo el Admin de Organización puede eliminar personal — un Supervisor no (antes cualquiera de los dos podía; decisión explícita de Dante). El botón ni siquiera se muestra en la ficha si sos Supervisor.
-8. **Auditoría** — listado de quién hizo qué y cuándo, sobre cualquier entidad
+8. **Auditoría** — listado de quién hizo qué y cuándo, sobre cualquier entidad. Solo puede **verlo** un Admin de Organización (o el Super Admin) — un Supervisor no. **CORREGIDO 2026-09-18**: eso era la intención desde el 15/09, pero la policy de RLS de esa fecha (`for all using (rol_actual() = 'admin')`, sin un `WITH CHECK` aparte) sin querer también bloqueaba que un Supervisor **escribiera** una fila — sus acciones se guardaban bien pero nunca quedaban en el historial, en silencio (Dante lo notó: "en auditoria no puedo ver las cargas de los supervisores"). Se separó en dos policies: lectura solo-admin (como se pretendía) y escritura para cualquier admin/supervisor de la organización (ver migración `20260918_personalcheck_auditoria_escritura_supervisor.sql`).
 9. **Alta de personal** — nombre, área (existente o nueva). **No pide turno** — se calcula solo cuando se le carga el horario en el paso 6
 
 ---
