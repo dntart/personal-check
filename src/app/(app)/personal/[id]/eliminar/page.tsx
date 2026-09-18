@@ -12,7 +12,10 @@ export default async function EliminarPersonalPage({
   const { id } = await params;
   const sesion = await obtenerSesion();
   if (!sesion) redirect("/login");
-  if (sesion.tipo !== "admin") redirect("/");
+  // Solo el Admin de Organización puede eliminar personal, no un Supervisor
+  // (a pedido explícito de Dante, 2026-09-18) — ver misma restricción en
+  // actions.ts.
+  if (sesion.tipo !== "admin" || sesion.rol !== "admin") redirect("/");
 
   const supabase = await createClient();
   const { data: operario } = await supabase

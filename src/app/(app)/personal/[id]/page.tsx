@@ -68,12 +68,14 @@ export default async function FichaPersonalPage({
         >
           Editar horario
         </Link>
-        <Link
-          href={`/personal/${id}/eliminar`}
-          className="rounded-sm border border-negativo px-4 py-2 text-sm text-negativo hover:bg-negativo/10"
-        >
-          Eliminar personal
-        </Link>
+        {sesion.tipo === "admin" && sesion.rol === "admin" && (
+          <Link
+            href={`/personal/${id}/eliminar`}
+            className="rounded-sm border border-negativo px-4 py-2 text-sm text-negativo hover:bg-negativo/10"
+          >
+            Eliminar personal
+          </Link>
+        )}
       </div>
 
       <section className="mt-8">

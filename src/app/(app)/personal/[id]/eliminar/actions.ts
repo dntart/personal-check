@@ -13,6 +13,11 @@ export type EstadoEliminar = { error: string } | null;
  * queda en Auditoría con quién lo hizo y por qué. Distinto de una baja real
  * por fin de relación laboral (que en el modelo real conservaría historial
  * — no está modelado en el MVP, ver spec sección 4).
+ *
+ * Solo el Admin de Organización puede hacerlo — un Supervisor no (a pedido
+ * explícito de Dante, 2026-09-18). `sesion.tipo === "admin"` solo distingue
+ * "es alguien de una organización" de "es el Super Admin"; hace falta
+ * además `sesion.rol === "admin"` para excluir a los Supervisores.
  */
 export async function eliminarOperario(
   operarioId: string,
@@ -20,8 +25,8 @@ export async function eliminarOperario(
   formData: FormData,
 ): Promise<EstadoEliminar> {
   const sesion = await obtenerSesion();
-  if (!sesion || sesion.tipo !== "admin") {
-    return { error: "No tenés permiso para hacer esto." };
+  if (!sesion || sesion.tipo !== "admin" || sesion.rol !== "admin") {
+    return { error: "Solo un Admin de organización puede eliminar personal." };
   }
 
   const parsed = eliminarPersonalSchema.safeParse({
