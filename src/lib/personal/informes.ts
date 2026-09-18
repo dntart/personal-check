@@ -212,5 +212,7 @@ const LABELS_POR_CODIGO: Record<string, string> = {
   salida_anticipada_injustificada: "Salida anticipada injustificada",
   salida_anticipada_justificada: "Salida anticipada justificada",
   licencia_anual_ordinaria: "Licencia Anual Ordinaria",
+  cambio_dia: "Cambio de día",
+  cambio_horario: "Cambio de horario",
   ajuste_manual: "Ajuste manual",
 };

@@ -40,6 +40,8 @@ const TIPOS_ESPECIFICOS: { codigo: string; label: string }[] = [
     label: "Salida anticipada justificada",
   },
   { codigo: "licencia_anual_ordinaria", label: "Licencia Anual Ordinaria" },
+  { codigo: "cambio_dia", label: "Cambio de día" },
+  { codigo: "cambio_horario", label: "Cambio de horario" },
 ];
 
 function ultimos12Meses() {

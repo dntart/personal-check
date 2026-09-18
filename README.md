@@ -49,6 +49,8 @@ proyecto compartido del portfolio):
    anticipada injustificada/justificada (mismo patrón que Tardanza)
 10. `20260918_personalcheck_licencia_anual_ordinaria.sql` — agrega Licencia
     Anual Ordinaria (neutra, no toca el banco de días compensatorio)
+11. `20260918_personalcheck_cambio_dia_y_horario.sql` — agrega Cambio de
+    día y Cambio de horario (avisos, no movimientos de saldo)
 
 Además, en **Project Settings > Data API**, el schema `personalcheck` y sus
 10 tablas tienen que estar tildados en "Exposed schemas" / "Exposed tables"

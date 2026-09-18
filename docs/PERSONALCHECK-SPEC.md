@@ -103,6 +103,17 @@ El saldo de cada persona **nunca se calcula a partir del reloj de fichaje**. Se 
 | Salida anticipada injustificada | **Minutos** (bloques de 30) | **Siempre neutro — nunca toca el saldo en días**                       | No                                                                                                                     |
 | Salida anticipada justificada   | **Minutos** (bloques de 30) | **Siempre neutro — nunca toca el saldo en días**                       | No                                                                                                                     |
 | Licencia Anual Ordinaria        | Días                        | **Neutro — no suma ni resta** (banco compensatorio es otra cuenta)     | No                                                                                                                     |
+| Cambio de día                   | Días                        | **Neutro — no suma ni resta** (aviso, no movimiento de saldo)          | No                                                                                                                     |
+| Cambio de horario               | Días                        | **Neutro — no suma ni resta** (aviso, no movimiento de saldo)          | No                                                                                                                     |
+
+> **AGREGADO 2026-09-18** — "Cambio de día" y "Cambio de horario" son
+> avisos, no movimientos de saldo: "Cambio de día" es cuando alguien se
+> ausenta un día pero lo compensa trabajando otro día distinto, con
+> autorización — no se descuenta porque lo va a devolver (a diferencia de
+> "Día compensado tomado", que sí resta porque ahí se usa un día ya
+> acumulado a favor). "Cambio de horario" es cuando alguien de un turno fijo
+> (ej. tarde) entra en el otro turno (ej. mañana) por un trabajo puntual —
+> se deja asentado el motivo, sin implicar ninguna falta ni ajuste.
 
 > **AGREGADO 2026-09-18** — Licencia Anual Ordinaria (vacaciones
 > reglamentarias): a diferencia del resto del catálogo, no es una novedad
