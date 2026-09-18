@@ -99,7 +99,7 @@ export async function cargarNovedad(
  * persona con saldo negativo o ≥ umbral, avisa por email a los Admin de la
  * organización. No bloquea la carga de la novedad si el email falla.
  */
-async function avisarSiSaldoFueraDeRango(
+export async function avisarSiSaldoFueraDeRango(
   operarioId: string,
   organizacionNombre: string,
 ) {

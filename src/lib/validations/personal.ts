@@ -35,3 +35,12 @@ export const eliminarPersonalSchema = z.object({
   operarioId: z.string().uuid(),
   motivo: z.string().trim().min(1, "El motivo es obligatorio"),
 });
+
+export const editarNovedadSchema = z.object({
+  movimientoId: z.string().uuid(),
+  tipoMovimientoId: z.string().uuid(),
+  fecha: z.string().min(1, "Elegí una fecha"),
+  cantidad: z.coerce.number(),
+  observaciones: z.string().trim().optional(),
+  motivo: z.string().trim().min(1, "Contá brevemente qué se corrigió"),
+});

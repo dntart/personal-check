@@ -47,6 +47,8 @@ proyecto compartido del portfolio):
    original del spec)
 9. `20260917_personalcheck_salida_anticipada.sql` — agrega Salida
    anticipada injustificada/justificada (mismo patrón que Tardanza)
+10. `20260918_personalcheck_licencia_anual_ordinaria.sql` — agrega Licencia
+    Anual Ordinaria (neutra, no toca el banco de días compensatorio)
 
 Además, en **Project Settings > Data API**, el schema `personalcheck` y sus
 10 tablas tienen que estar tildados en "Exposed schemas" / "Exposed tables"

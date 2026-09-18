@@ -35,6 +35,7 @@ const TIPOS_ESPECIFICOS: { codigo: string; label: string }[] = [
     codigo: "salida_anticipada_justificada",
     label: "Salida anticipada justificada",
   },
+  { codigo: "licencia_anual_ordinaria", label: "Licencia Anual Ordinaria" },
 ];
 
 function ultimos12Meses() {

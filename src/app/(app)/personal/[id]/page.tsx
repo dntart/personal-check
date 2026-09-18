@@ -144,11 +144,17 @@ export default async function FichaPersonalPage({
                       href={m.adjunto_url}
                       target="_blank"
                       rel="noreferrer"
-                      className="mt-1 inline-block text-xs text-acento underline"
+                      className="mt-1 mr-3 inline-block text-xs text-acento underline"
                     >
                       Ver adjunto
                     </a>
                   )}
+                  <Link
+                    href={`/personal/${id}/novedad/${m.id}/editar`}
+                    className="mt-1 inline-block text-xs text-acento underline transition-opacity hover:opacity-70"
+                  >
+                    Corregir
+                  </Link>
                 </li>
               );
             })}

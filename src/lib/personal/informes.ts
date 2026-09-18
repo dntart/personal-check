@@ -211,5 +211,6 @@ const LABELS_POR_CODIGO: Record<string, string> = {
   tardanza_justificada: "Tardanza justificada",
   salida_anticipada_injustificada: "Salida anticipada injustificada",
   salida_anticipada_justificada: "Salida anticipada justificada",
+  licencia_anual_ordinaria: "Licencia Anual Ordinaria",
   ajuste_manual: "Ajuste manual",
 };
