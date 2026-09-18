@@ -24,14 +24,19 @@ function nombreArchivo(datos: DatosInforme, extension: string) {
   return `personalcheck-${datos.anio}-${mesStr}.${extension}`;
 }
 
-function formatearCantidad(cantidad: number, unidad: "dias" | "minutos") {
+// Exportadas para que la vista previa (InformeDescarga) muestre exactamente
+// el mismo formato que termina en el PDF/Excel — una sola fuente de verdad.
+export function formatearCantidad(
+  cantidad: number,
+  unidad: "dias" | "minutos",
+) {
   const signo = cantidad > 0 ? "+" : "";
   return `${signo}${cantidad} ${unidad === "minutos" ? "min" : "días"}`;
 }
 
-/** "" si el total es 0 — evita imprimir "0 días" en una fila que en
+/** "—" si el total es 0 — evita imprimir "0 días" en una fila que en
  * realidad solo tiene minutos (o viceversa). */
-function celdaResumen(total: number, unidad: "dias" | "minutos") {
+export function celdaResumen(total: number, unidad: "dias" | "minutos") {
   return total === 0 ? "—" : formatearCantidad(total, unidad);
 }
 

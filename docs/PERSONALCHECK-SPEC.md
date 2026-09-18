@@ -162,6 +162,7 @@ El saldo de cada persona **nunca se calcula a partir del reloj de fichaje**. Se 
 - **ACTUALIZADO 2026-09-15**: además de esos 3, el filtro de tipo admite elegir **un tipo de novedad específico** (Día compensado tomado / Día u hora extra trabajado / Falta injustificada / Falta justificada / Tardanza injustificada / Tardanza justificada) — el detalle muestra solo ese tipo en el mes, y el resumen es el total histórico de esa persona en ese tipo puntual (en su propia unidad: días o minutos)
 - Las faltas justificadas y las tardanzas (ambas de efecto neutro) **nunca aparecen** en los informes "Solo a favor"/"Solo a descontar" — sí aparecen en el General, y en un informe filtrado exactamente por ese tipo
 - El Excel se genera con dos hojas: **Novedades** (el detalle) y **Resumen** (el mismo total que el PDF)
+- **ACTUALIZADO 2026-09-18**: antes de descargar, "Ver vista previa" arma la misma consulta y muestra el detalle (y el resumen, si se pidió) como tabla en pantalla — recién ahí aparecen los botones "Descargar PDF"/"Descargar Excel", que usan esos mismos datos ya traídos (no vuelven a consultar). Cambiar cualquier filtro invalida la vista previa, para que nunca se pueda descargar algo que no coincide con lo último que se vio.
 
 ---
 

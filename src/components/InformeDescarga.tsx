@@ -5,9 +5,13 @@ import { obtenerDatosInformeAction } from "@/app/(app)/informes/actions";
 import {
   generarPdf,
   generarExcel,
+  formatearCantidad,
+  celdaResumen,
   NOMBRE_MES,
 } from "@/lib/personal/generar-informe";
+import { formatearFecha } from "@/lib/personal/reglas";
 import type {
+  DatosInforme,
   FiltroAgregado,
   ParametrosInforme,
 } from "@/lib/personal/informes";
@@ -65,15 +69,25 @@ export function InformeDescarga({
     new Set(),
   );
   const [incluirResumen, setIncluirResumen] = useState(false);
-  const [pendiente, setPendiente] = useState<"pdf" | "excel" | null>(null);
+  // La vista previa ES la confirmación: no se descarga nada hasta que el
+  // admin vea exactamente qué va a bajar y toque un botón de descarga
+  // aparte. Cualquier cambio de filtro invalida la preview (queda null) —
+  // así nunca se puede descargar algo que no coincide con lo que se vio.
+  const [preview, setPreview] = useState<DatosInforme | null>(null);
+  const [cargandoPreview, setCargandoPreview] = useState(false);
   const [generando, setGenerando] = useState<"pdf" | "excel" | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const meses = ultimos12Meses();
   const { mes, anio, label: labelMes } = meses[mesElegido];
 
+  function invalidarPreview() {
+    setPreview(null);
+    setError(null);
+  }
+
   function toggleCodigo(codigo: string) {
-    setPendiente(null);
+    invalidarPreview();
     setCodigosElegidos((prev) => {
       const next = new Set(prev);
       if (next.has(codigo)) next.delete(codigo);
@@ -88,21 +102,14 @@ export function InformeDescarga({
     return { modo: "especifico", codigos: [...codigosElegidos] };
   }
 
-  function elegirFormato(formato: "pdf" | "excel") {
-    if (!armarParametros()) {
+  async function verPreview() {
+    const params = armarParametros();
+    if (!params) {
       setError("Elegí al menos un tipo de novedad.");
       return;
     }
     setError(null);
-    setPendiente(formato);
-  }
-
-  async function confirmarDescarga() {
-    const formato = pendiente;
-    const params = armarParametros();
-    if (!formato || !params) return;
-    setGenerando(formato);
-    setError(null);
+    setCargandoPreview(true);
     try {
       const datos = await obtenerDatosInformeAction(
         mes,
@@ -114,12 +121,24 @@ export function InformeDescarga({
         setError(datos.error);
         return;
       }
+      setPreview(datos);
+    } catch {
+      setError("No se pudo generar la vista previa.");
+    } finally {
+      setCargandoPreview(false);
+    }
+  }
+
+  async function descargar(formato: "pdf" | "excel") {
+    if (!preview) return;
+    setGenerando(formato);
+    setError(null);
+    try {
       if (formato === "pdf") {
-        await generarPdf(datos, organizacionNombre);
+        await generarPdf(preview, organizacionNombre);
       } else {
-        await generarExcel(datos, organizacionNombre);
+        await generarExcel(preview, organizacionNombre);
       }
-      setPendiente(null);
     } catch {
       setError("No se pudo generar el archivo.");
     } finally {
@@ -146,7 +165,7 @@ export function InformeDescarga({
           value={mesElegido}
           onChange={(e) => {
             setMesElegido(Number(e.target.value));
-            setPendiente(null);
+            invalidarPreview();
           }}
           className="rounded-sm border border-borde bg-superficie px-2 py-1 text-sm"
         >
@@ -162,7 +181,7 @@ export function InformeDescarga({
             type="button"
             onClick={() => {
               setModo("agregado");
-              setPendiente(null);
+              invalidarPreview();
             }}
             className={`px-3 py-1 ${modo === "agregado" ? "bg-acento text-white" : "hover:bg-papel"}`}
           >
@@ -172,7 +191,7 @@ export function InformeDescarga({
             type="button"
             onClick={() => {
               setModo("especifico");
-              setPendiente(null);
+              invalidarPreview();
             }}
             className={`px-3 py-1 ${modo === "especifico" ? "bg-acento text-white" : "hover:bg-papel"}`}
           >
@@ -184,7 +203,7 @@ export function InformeDescarga({
           type="button"
           onClick={() => {
             setAbierto(false);
-            setPendiente(null);
+            invalidarPreview();
           }}
           className="ml-auto text-sm opacity-60 hover:opacity-100"
         >
@@ -202,7 +221,7 @@ export function InformeDescarga({
                 checked={agregado === o.valor}
                 onChange={() => {
                   setAgregado(o.valor);
-                  setPendiente(null);
+                  invalidarPreview();
                 }}
               />
               {o.label}
@@ -230,58 +249,138 @@ export function InformeDescarga({
           checked={incluirResumen}
           onChange={(e) => {
             setIncluirResumen(e.target.checked);
-            setPendiente(null);
+            invalidarPreview();
           }}
         />
         Incluir resumen acumulado histórico al final
       </label>
 
-      <div className="flex flex-wrap items-center gap-2">
-        <button
-          type="button"
-          onClick={() => elegirFormato("pdf")}
-          disabled={generando !== null}
-          className="rounded-sm bg-acento px-3 py-1.5 text-sm font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-60"
-        >
-          PDF
-        </button>
-        <button
-          type="button"
-          onClick={() => elegirFormato("excel")}
-          disabled={generando !== null}
-          className="rounded-sm border border-borde px-3 py-1.5 text-sm hover:bg-papel disabled:opacity-60"
-        >
-          Excel
-        </button>
-      </div>
-
-      {pendiente && (
-        <div className="flex flex-wrap items-center gap-2 rounded-sm border border-acento bg-turno-manana p-2 text-sm">
-          <span>
-            Vas a descargar: <strong>{labelMes}</strong>
-            {incluirResumen ? " (con resumen)" : ""} en{" "}
-            <strong>{pendiente === "pdf" ? "PDF" : "Excel"}</strong>
-          </span>
-          <button
-            type="button"
-            onClick={confirmarDescarga}
-            disabled={generando !== null}
-            className="rounded-sm bg-acento px-3 py-1 text-sm font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-60"
-          >
-            {generando ? "Generando…" : "Confirmar descarga"}
-          </button>
-          <button
-            type="button"
-            onClick={() => setPendiente(null)}
-            disabled={generando !== null}
-            className="rounded-sm border border-borde px-3 py-1 text-sm hover:bg-papel disabled:opacity-60"
-          >
-            Cancelar
-          </button>
-        </div>
-      )}
+      <button
+        type="button"
+        onClick={verPreview}
+        disabled={cargandoPreview}
+        className="self-start rounded-sm bg-acento px-3 py-1.5 text-sm font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-60"
+      >
+        {cargandoPreview ? "Generando vista previa…" : "Ver vista previa"}
+      </button>
 
       {error && <p className="text-xs text-negativo">{error}</p>}
+
+      {preview && (
+        <div className="flex flex-col gap-3 border-t border-borde pt-3">
+          <p className="text-sm">
+            <strong>{labelMes}</strong> — {preview.filtroLabel} —{" "}
+            {preview.movimientos.length}{" "}
+            {preview.movimientos.length === 1 ? "novedad" : "novedades"}
+          </p>
+
+          {preview.movimientos.length === 0 ? (
+            <p className="text-sm opacity-70">
+              No hay novedades que coincidan con este filtro.
+            </p>
+          ) : (
+            <div className="max-h-80 overflow-auto rounded-sm border border-borde">
+              <table className="w-full min-w-[520px] border-collapse text-sm">
+                <thead className="sticky top-0 bg-papel">
+                  <tr className="border-b border-borde">
+                    <th className="px-2 py-1.5 text-left font-medium">Fecha</th>
+                    <th className="px-2 py-1.5 text-left font-medium">
+                      Persona
+                    </th>
+                    <th className="px-2 py-1.5 text-left font-medium">Tipo</th>
+                    <th className="px-2 py-1.5 text-right font-medium">
+                      Cantidad
+                    </th>
+                    <th className="px-2 py-1.5 text-left font-medium">
+                      Observaciones
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {preview.movimientos.map((m) => (
+                    <tr
+                      key={m.id}
+                      className="border-b border-borde/50 last:border-0"
+                    >
+                      <td className="px-2 py-1.5 font-mono whitespace-nowrap">
+                        {formatearFecha(m.fecha)}
+                      </td>
+                      <td className="px-2 py-1.5">{m.operarioNombre}</td>
+                      <td className="px-2 py-1.5">{m.tipoNombre}</td>
+                      <td className="px-2 py-1.5 text-right font-mono whitespace-nowrap">
+                        {formatearCantidad(m.cantidad, m.tipoUnidad)}
+                      </td>
+                      <td className="px-2 py-1.5 opacity-80">
+                        {m.observaciones ?? ""}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          {preview.resumen && (
+            <div>
+              <h3 className="mb-1 text-xs font-semibold uppercase tracking-wide opacity-60">
+                Resumen (histórico acumulado)
+              </h3>
+              <div className="max-h-60 overflow-auto rounded-sm border border-borde">
+                <table className="w-full min-w-[360px] border-collapse text-sm">
+                  <thead className="sticky top-0 bg-papel">
+                    <tr className="border-b border-borde">
+                      <th className="px-2 py-1.5 text-left font-medium">
+                        Persona
+                      </th>
+                      <th className="px-2 py-1.5 text-right font-medium">
+                        Total días
+                      </th>
+                      <th className="px-2 py-1.5 text-right font-medium">
+                        Total minutos
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {preview.resumen.map((r) => (
+                      <tr
+                        key={r.operarioId}
+                        className="border-b border-borde/50 last:border-0"
+                      >
+                        <td className="px-2 py-1.5">{r.nombre}</td>
+                        <td className="px-2 py-1.5 text-right font-mono">
+                          {celdaResumen(r.totalDias, "dias")}
+                        </td>
+                        <td className="px-2 py-1.5 text-right font-mono">
+                          {celdaResumen(r.totalMinutos, "minutos")}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              onClick={() => descargar("pdf")}
+              disabled={generando !== null}
+              className="rounded-sm bg-acento px-3 py-1.5 text-sm font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-60"
+            >
+              {generando === "pdf" ? "Generando…" : "Descargar PDF"}
+            </button>
+            <button
+              type="button"
+              onClick={() => descargar("excel")}
+              disabled={generando !== null}
+              className="rounded-sm border border-borde px-3 py-1.5 text-sm hover:bg-papel disabled:opacity-60"
+            >
+              {generando === "excel" ? "Generando…" : "Descargar Excel"}
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
