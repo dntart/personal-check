@@ -194,7 +194,7 @@ export async function obtenerUltimasNovedades(limite = 8) {
   const { data } = await supabase
     .from("movimientos")
     .select(
-      "id, fecha, observaciones, operarios(nombre), tipos_movimiento(nombre)",
+      "id, fecha, observaciones, operarios(nombre), tipos_movimiento(nombre), admins(nombre)",
     )
     .is("deleted_at", null)
     .order("created_at", { ascending: false })
@@ -203,12 +203,14 @@ export async function obtenerUltimasNovedades(limite = 8) {
   return (data ?? []).map((m) => {
     const operario = m.operarios as unknown as { nombre: string } | null;
     const tipo = m.tipos_movimiento as unknown as { nombre: string } | null;
+    const admin = m.admins as unknown as { nombre: string } | null;
     return {
       id: m.id,
       fecha: m.fecha,
       observaciones: m.observaciones,
       operarioNombre: operario?.nombre ?? "—",
       tipoNombre: tipo?.nombre ?? "—",
+      cargadoPor: admin?.nombre ?? "—",
     };
   });
 }
@@ -308,7 +310,7 @@ export async function obtenerFichaPersonal(operarioId: string) {
     supabase
       .from("movimientos")
       .select(
-        "id, fecha, cantidad, observaciones, adjunto_url, tipo_movimiento_id, tipos_movimiento(codigo, nombre, impacto, unidad)",
+        "id, fecha, cantidad, observaciones, adjunto_url, tipo_movimiento_id, tipos_movimiento(codigo, nombre, impacto, unidad), admins(nombre)",
       )
       .eq("operario_id", operarioId)
       .is("deleted_at", null)

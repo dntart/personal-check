@@ -26,6 +26,7 @@ export type MovimientoInforme = {
   tipoUnidad: "dias" | "minutos";
   cantidad: number;
   observaciones: string | null;
+  cargadoPor: string;
 };
 
 export type ResumenPersona = {
@@ -58,6 +59,7 @@ type MovimientoCrudo = {
   observaciones: string | null;
   operarios: { nombre: string } | null;
   tipos_movimiento: TipoMov | null;
+  admins: { nombre: string } | null;
 };
 
 const LABEL_AGREGADO: Record<FiltroAgregado, string> = {
@@ -102,7 +104,7 @@ export async function obtenerInforme(
     supabase
       .from("movimientos")
       .select(
-        "id, operario_id, fecha, cantidad, observaciones, operarios(nombre), tipos_movimiento(codigo, nombre, impacto, unidad)",
+        "id, operario_id, fecha, cantidad, observaciones, operarios(nombre), tipos_movimiento(codigo, nombre, impacto, unidad), admins(nombre)",
       )
       .is("deleted_at", null)
       .gte("fecha", desde)
@@ -130,6 +132,7 @@ export async function obtenerInforme(
       tipoUnidad: m.tipos_movimiento?.unidad ?? "dias",
       cantidad: m.cantidad,
       observaciones: m.observaciones,
+      cargadoPor: m.admins?.nombre ?? "—",
     }));
 
   let resumen: ResumenPersona[] | null = null;

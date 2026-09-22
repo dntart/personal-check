@@ -126,6 +126,7 @@ export default async function FichaPersonalPage({
                 unidad: "dias" | "minutos";
                 impacto: "suma" | "resta" | "neutro";
               } | null;
+              const admin = m.admins as unknown as { nombre: string } | null;
               return (
                 <li
                   key={m.id}
@@ -139,6 +140,9 @@ export default async function FichaPersonalPage({
                   </div>
                   <p className="mt-1 font-mono">
                     {m.cantidad} {tipo?.unidad === "minutos" ? "min" : "días"}
+                  </p>
+                  <p className="mt-1 text-xs opacity-60">
+                    Cargado por {admin?.nombre ?? "—"}
                   </p>
                   {m.observaciones && (
                     <p className="mt-1 whitespace-pre-wrap opacity-80">

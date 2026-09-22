@@ -65,11 +65,14 @@ export async function generarPdf(
     m.tipoNombre,
     formatearCantidad(m.cantidad, m.tipoUnidad),
     m.observaciones ?? "",
+    m.cargadoPor,
   ]);
 
   autoTable(doc, {
     startY: 32,
-    head: [["Fecha", "Persona", "Tipo", "Cantidad", "Observaciones"]],
+    head: [
+      ["Fecha", "Persona", "Tipo", "Cantidad", "Observaciones", "Cargado por"],
+    ],
     body: filasMovimientos,
     styles: { fontSize: 8 },
     headStyles: { fillColor: [31, 77, 76] },
@@ -114,6 +117,7 @@ export async function generarExcel(
       Cantidad: m.cantidad,
       Unidad: m.tipoUnidad === "minutos" ? "minutos" : "días",
       Observaciones: m.observaciones ?? "",
+      "Cargado por": m.cargadoPor,
     })),
   );
 

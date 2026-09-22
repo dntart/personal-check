@@ -282,7 +282,7 @@ export function InformeDescarga({
             </p>
           ) : (
             <div className="max-h-80 overflow-auto rounded-sm border border-borde">
-              <table className="w-full min-w-[520px] border-collapse text-sm">
+              <table className="w-full min-w-[640px] border-collapse text-sm">
                 <thead className="sticky top-0 bg-papel">
                   <tr className="border-b border-borde">
                     <th className="px-2 py-1.5 text-left font-medium">Fecha</th>
@@ -295,6 +295,9 @@ export function InformeDescarga({
                     </th>
                     <th className="px-2 py-1.5 text-left font-medium">
                       Observaciones
+                    </th>
+                    <th className="px-2 py-1.5 text-left font-medium">
+                      Cargado por
                     </th>
                   </tr>
                 </thead>
@@ -314,6 +317,9 @@ export function InformeDescarga({
                       </td>
                       <td className="px-2 py-1.5 opacity-80">
                         {m.observaciones ?? ""}
+                      </td>
+                      <td className="px-2 py-1.5 whitespace-nowrap opacity-80">
+                        {m.cargadoPor}
                       </td>
                     </tr>
                   ))}
