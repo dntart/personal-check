@@ -26,7 +26,8 @@ const AGREGADOS: { valor: FiltroAgregado; label: string }[] = [
 // que no es una novedad de personal sino una corrección administrativa.
 const TIPOS_ESPECIFICOS: { codigo: string; label: string }[] = [
   { codigo: "compensado_tomado", label: "Día compensado tomado" },
-  { codigo: "extra_trabajado", label: "Día/hora extra trabajado" },
+  { codigo: "dia_extra_trabajado", label: "Día extra trabajado" },
+  { codigo: "hora_extra_trabajada", label: "Hora extra trabajada" },
   { codigo: "falta_injustificada", label: "Falta injustificada" },
   { codigo: "falta_justificada", label: "Falta justificada" },
   { codigo: "tardanza_injustificada", label: "Tardanza injustificada" },
@@ -40,6 +41,7 @@ const TIPOS_ESPECIFICOS: { codigo: string; label: string }[] = [
     label: "Salida anticipada justificada",
   },
   { codigo: "licencia_anual_ordinaria", label: "Licencia Anual Ordinaria" },
+  { codigo: "licencia_extraordinaria", label: "Licencia Extraordinaria" },
   { codigo: "cambio_dia", label: "Cambio de día" },
   { codigo: "cambio_horario", label: "Cambio de horario" },
 ];

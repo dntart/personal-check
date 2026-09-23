@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { obtenerSesion } from "@/lib/supabase/sesion";
 import { registrarAuditoria } from "@/lib/personal/auditoria";
 import { editarNovedadSchema } from "@/lib/validations/personal";
+import { esBloque30 } from "@/lib/personal/reglas";
 import { avisarSiSaldoFueraDeRango } from "../../actions";
 
 export type EstadoEditarNovedad = { error: string } | null;
@@ -58,6 +59,23 @@ export async function editarNovedad(
     .maybeSingle();
 
   if (!anterior) return { error: "No se encontró esa novedad." };
+
+  const { data: tipo } = await supabase
+    .from("tipos_movimiento")
+    .select("codigo, nombre")
+    .eq("id", parsed.data.tipoMovimientoId)
+    .maybeSingle();
+
+  if (!tipo) return { error: "Tipo de novedad inválido." };
+
+  // Mismo chequeo que al cargar: el desplegable del formulario ya lo
+  // fuerza, esto es el respaldo del lado del servidor.
+  if (
+    esBloque30(tipo.codigo) &&
+    (parsed.data.cantidad <= 0 || parsed.data.cantidad % 30 !== 0)
+  ) {
+    return { error: `"${tipo.nombre}" se carga en bloques de 30 minutos.` };
+  }
 
   const adjuntoUrl = String(formData.get("adjuntoUrl") ?? "").trim() || null;
 

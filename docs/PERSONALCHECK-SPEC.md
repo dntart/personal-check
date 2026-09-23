@@ -95,7 +95,8 @@ El saldo de cada persona **nunca se calcula a partir del reloj de fichaje**. Se 
 | ------------------------------- | --------------------------- | ---------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
 | Falta injustificada             | Días                        | Resta                                                                  | No                                                                                                                     |
 | Falta justificada               | Días                        | **Neutro — no suma ni resta** (queda solo registrada, con certificado) | **Sí, obligatorio** — TEMPORAL: desactivado desde 2026-09-17 (a pedido de Dante), no bloquea la carga; ver nota debajo |
-| Día/hora extra trabajado        | Días                        | Suma                                                                   | No                                                                                                                     |
+| Día extra trabajado             | Días                        | Suma                                                                   | No                                                                                                                     |
+| Hora extra trabajada            | **Minutos** (bloques de 30) | **Siempre neutro — nunca toca el saldo en días**                       | No                                                                                                                     |
 | Día compensado tomado           | Días                        | Resta                                                                  | No                                                                                                                     |
 | Ajuste manual                   | Días                        | Variable — el signo lo define el admin al cargar la cantidad           | No                                                                                                                     |
 | Tardanza injustificada          | **Minutos**                 | **Siempre neutro — nunca toca el saldo en días**                       | No                                                                                                                     |
@@ -103,8 +104,28 @@ El saldo de cada persona **nunca se calcula a partir del reloj de fichaje**. Se 
 | Salida anticipada injustificada | **Minutos** (bloques de 30) | **Siempre neutro — nunca toca el saldo en días**                       | No                                                                                                                     |
 | Salida anticipada justificada   | **Minutos** (bloques de 30) | **Siempre neutro — nunca toca el saldo en días**                       | No                                                                                                                     |
 | Licencia Anual Ordinaria        | Días                        | **Neutro — no suma ni resta** (banco compensatorio es otra cuenta)     | No                                                                                                                     |
+| Licencia Extraordinaria         | Días                        | **Neutro — no suma ni resta** (banco compensatorio es otra cuenta)     | No                                                                                                                     |
 | Cambio de día                   | Días                        | **Neutro — no suma ni resta** (aviso, no movimiento de saldo)          | No                                                                                                                     |
 | Cambio de horario               | **Minutos**                 | **Neutro — no suma ni resta** (aviso, no movimiento de saldo)          | No                                                                                                                     |
+
+> **AGREGADO 2026-09-22** — "Día/hora extra trabajado" solo dejaba cargar
+> en días: si alguien se quedó 1 hora de más, no había forma de
+> registrarlo. Se dividió en dos, mismo patrón que Tardanza/Salida
+> anticipada: **Día extra trabajado** (días, suma al banco, es el tipo
+> renombrado — los movimientos ya cargados con el viejo "Día/hora extra
+> trabajado" quedan iguales, solo cambió el nombre) y **Hora extra
+> trabajada** (minutos, bloques de 30, **neutra** — mismo criterio que el
+> resto del catálogo en minutos: no hay conversión automática entre
+> minutos y días). "Licencia Extraordinaria" (licencia por temporada,
+> invierno/verano en el taller) se agregó con el mismo tratamiento que
+> Licencia Anual Ordinaria.
+>
+> También se corrigió un problema real en mobile: el `step={30}` de un
+> `<input type="number">` no impide tipear cualquier valor a mano (el
+> navegador solo lo usa para las flechitas, que en mobile casi nunca se
+> ven) — "Salida anticipada" y "Hora extra trabajada" pasan a un
+> desplegable con las opciones fijas (30, 60, 90… hasta 240), con el mismo
+> chequeo repetido del lado del servidor por si acaso.
 
 > **AGREGADO 2026-09-18** — "Cambio de día" y "Cambio de horario" son
 > avisos, no movimientos de saldo: "Cambio de día" es cuando alguien se

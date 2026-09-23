@@ -58,6 +58,12 @@ proyecto compartido del portfolio):
     en Auditoría (solo se había restringido lectura por error, la policy
     también bloqueaba el INSERT) — sin esto, ninguna acción de un
     Supervisor queda en el historial
+14. `20260922_personalcheck_dividir_extra_trabajado.sql` — renombra "Día/hora
+    extra trabajado" a "Día extra trabajado" (mismo tipo, mismos
+    movimientos ya cargados) y agrega "Hora extra trabajada" (minutos,
+    bloques de 30, neutra)
+15. `20260922_personalcheck_licencia_extraordinaria.sql` — agrega Licencia
+    Extraordinaria (mismo tratamiento que Licencia Anual Ordinaria)
 
 Además, en **Project Settings > Data API**, el schema `personalcheck` y sus
 10 tablas tienen que estar tildados en "Exposed schemas" / "Exposed tables"

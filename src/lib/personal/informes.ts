@@ -207,7 +207,9 @@ export async function obtenerInforme(
 // para armar la etiqueta del informe.
 const LABELS_POR_CODIGO: Record<string, string> = {
   compensado_tomado: "Día compensado tomado",
-  extra_trabajado: "Día/hora extra trabajado",
+  dia_extra_trabajado: "Día extra trabajado",
+  hora_extra_trabajada: "Hora extra trabajada",
+  licencia_extraordinaria: "Licencia Extraordinaria",
   falta_injustificada: "Falta injustificada",
   falta_justificada: "Falta justificada",
   tardanza_injustificada: "Tardanza injustificada",

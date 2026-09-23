@@ -2,6 +2,7 @@
 
 import { useActionState, useState } from "react";
 import { editarNovedad, type EstadoEditarNovedad } from "./actions";
+import { esBloque30, OPCIONES_BLOQUE_30 } from "@/lib/personal/reglas";
 
 type Tipo = {
   id: string;
@@ -19,10 +20,19 @@ type MovimientoActual = {
   adjuntoUrl: string | null;
 };
 
-function defaultDeCantidad(esSalidaAnticipada: boolean, esMinutos: boolean) {
-  if (esSalidaAnticipada) return 30;
+function defaultDeCantidad(usaBloque30: boolean, esMinutos: boolean) {
+  if (usaBloque30) return 30;
   if (esMinutos) return 10;
   return 1;
+}
+
+/** Por si ya había una cantidad cargada que no es múltiplo de 30 (dato
+ * viejo, de antes de este fix) — la redondea a la opción más cercana para
+ * que el <select> siempre tenga un valor válido preseleccionado. */
+function opcionMasCercana(cantidad: number) {
+  return OPCIONES_BLOQUE_30.reduce((mejor, actual) =>
+    Math.abs(actual - cantidad) < Math.abs(mejor - cantidad) ? actual : mejor,
+  );
 }
 
 export function EditarNovedadForm({
@@ -49,6 +59,8 @@ export function EditarNovedadForm({
     tipoSeleccionado?.codigo.startsWith("salida_anticipada"),
   );
   const esCambioHorario = tipoSeleccionado?.codigo === "cambio_horario";
+  const esHoraExtra = tipoSeleccionado?.codigo === "hora_extra_trabajada";
+  const usaBloque30 = esBloque30(tipoSeleccionado?.codigo);
 
   // Si todavía es el mismo tipo que ya tenía cargado, mantenemos la
   // cantidad tal cual estaba — si cambió a otro tipo, un valor por defecto
@@ -56,7 +68,7 @@ export function EditarNovedadForm({
   const cantidadPorDefecto =
     tipoId === actual.tipoMovimientoId
       ? actual.cantidad
-      : defaultDeCantidad(esSalidaAnticipada, esMinutos);
+      : defaultDeCantidad(usaBloque30, esMinutos);
 
   return (
     <form action={formAction} className="flex flex-col gap-4">
@@ -99,24 +111,38 @@ export function EditarNovedadForm({
             ? "Minutos de salida anticipada"
             : esCambioHorario
               ? "Minutos de cambio de horario"
-              : esMinutos
-                ? "Minutos de tardanza"
-                : "Cantidad (± días)"}
+              : esHoraExtra
+                ? "Minutos de hora extra trabajada"
+                : esMinutos
+                  ? "Minutos de tardanza"
+                  : "Cantidad (± días)"}
         </label>
-        <input
-          key={tipoId}
-          id="cantidad"
-          name="cantidad"
-          type="number"
-          step={esSalidaAnticipada ? 30 : esMinutos ? 1 : 0.5}
-          required
-          defaultValue={cantidadPorDefecto}
-          className="rounded-sm border border-borde bg-superficie px-3 py-2 text-sm font-mono outline-none focus:border-acento"
-        />
-        {esSalidaAnticipada && (
-          <p className="text-xs opacity-60">
-            Se carga en bloques de 30 minutos (30, 60, 90…).
-          </p>
+        {usaBloque30 ? (
+          <select
+            key={tipoId}
+            id="cantidad"
+            name="cantidad"
+            required
+            defaultValue={opcionMasCercana(cantidadPorDefecto)}
+            className="rounded-sm border border-borde bg-superficie px-3 py-2 text-sm font-mono outline-none focus:border-acento"
+          >
+            {OPCIONES_BLOQUE_30.map((min) => (
+              <option key={min} value={min}>
+                {min} min
+              </option>
+            ))}
+          </select>
+        ) : (
+          <input
+            key={tipoId}
+            id="cantidad"
+            name="cantidad"
+            type="number"
+            step={esMinutos ? 1 : 0.5}
+            required
+            defaultValue={cantidadPorDefecto}
+            className="rounded-sm border border-borde bg-superficie px-3 py-2 text-sm font-mono outline-none focus:border-acento"
+          />
         )}
         {!esMinutos && tipoSeleccionado?.nombre === "Ajuste manual" && (
           <p className="text-xs opacity-60">

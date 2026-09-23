@@ -5,7 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { obtenerSesion } from "@/lib/supabase/sesion";
 import { registrarAuditoria } from "@/lib/personal/auditoria";
 import { obtenerSaldoOperario, obtenerEmailsAdmins } from "@/lib/personal/data";
-import { UMBRAL_SALDO_ALTO } from "@/lib/personal/reglas";
+import { UMBRAL_SALDO_ALTO, esBloque30 } from "@/lib/personal/reglas";
 import { enviarEmail } from "@/lib/resend";
 import { cargarNovedadSchema } from "@/lib/validations/personal";
 
@@ -41,11 +41,22 @@ export async function cargarNovedad(
 
   const { data: tipo } = await supabase
     .from("tipos_movimiento")
-    .select("id, nombre, requiere_adjunto")
+    .select("id, codigo, nombre, requiere_adjunto")
     .eq("id", parsed.data.tipoMovimientoId)
     .maybeSingle();
 
   if (!tipo) return { error: "Tipo de novedad inválido." };
+
+  // El formulario ya lo fuerza con un desplegable (un <input type=number>
+  // con step no impide tipear cualquier valor a mano, sobre todo en
+  // mobile), pero esto viene de un FormData crudo — puede llegar cualquier
+  // cosa sin pasar por el select. Doble chequeo del lado del servidor.
+  if (
+    esBloque30(tipo.codigo) &&
+    (parsed.data.cantidad <= 0 || parsed.data.cantidad % 30 !== 0)
+  ) {
+    return { error: `"${tipo.nombre}" se carga en bloques de 30 minutos.` };
+  }
 
   const adjuntoUrl = String(formData.get("adjuntoUrl") ?? "").trim() || null;
   // TEMPORAL (2026-09-17, a pedido explícito de Dante): el bucket de

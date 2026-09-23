@@ -74,3 +74,27 @@ export const CODIGO_TARDANZA_INJUSTIFICADA = "tardanza_injustificada";
 export function esAdministracion(nombreDeArea: string): boolean {
   return nombreDeArea.trim().toLowerCase() === "administración";
 }
+
+/**
+ * Tipos de novedad que se cargan en bloques de 30 minutos (30, 60, 90…),
+ * no minuto a minuto como Tardanza — Salida anticipada (a pedido de Dante,
+ * "podemos hacerla cada 30 minutos") y Hora extra trabajada (mismo
+ * criterio, porque en la práctica los permisos/horas extra se dan en
+ * medias horas). Un solo lugar para esta lista: la usan tanto los
+ * formularios (para mostrar un <select> en vez de un número libre — un
+ * <input type=number> con step no impide tipear cualquier valor a mano,
+ * sobre todo en mobile) como las Server Actions (para no confiar solo en
+ * el <select> del cliente).
+ */
+const CODIGOS_BLOQUE_30 = ["hora_extra_trabajada"];
+export function esBloque30(codigo: string | undefined): boolean {
+  return (
+    codigo !== undefined &&
+    (codigo.startsWith("salida_anticipada") ||
+      CODIGOS_BLOQUE_30.includes(codigo))
+  );
+}
+export const OPCIONES_BLOQUE_30 = Array.from(
+  { length: 8 },
+  (_, i) => (i + 1) * 30,
+);
