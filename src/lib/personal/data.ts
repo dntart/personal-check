@@ -4,6 +4,7 @@ import {
   calcularEfecto,
   UMBRAL_SALDO_ALTO,
   CODIGO_TARDANZA_INJUSTIFICADA,
+  CODIGO_HORA_EXTRA_TRABAJADA,
 } from "./reglas";
 import { agruparParaNomina, type AreaNomina } from "./nomina";
 
@@ -321,6 +322,7 @@ export async function obtenerFichaPersonal(operarioId: string) {
 
   let saldo = 0;
   let minutosTardanza = 0;
+  let minutosExtra = 0;
   const movimientos = movimientosRes.data ?? [];
   for (const m of movimientos) {
     const tipo = m.tipos_movimiento as unknown as {
@@ -333,6 +335,8 @@ export async function obtenerFichaPersonal(operarioId: string) {
     if (tipo.unidad === "minutos") {
       if (tipo.codigo === CODIGO_TARDANZA_INJUSTIFICADA) {
         minutosTardanza += m.cantidad;
+      } else if (tipo.codigo === CODIGO_HORA_EXTRA_TRABAJADA) {
+        minutosExtra += m.cantidad;
       }
     } else {
       saldo += calcularEfecto(tipo.impacto, m.cantidad);
@@ -345,6 +349,7 @@ export async function obtenerFichaPersonal(operarioId: string) {
     movimientos,
     saldo,
     minutosTardanza,
+    minutosExtra,
   };
 }
 

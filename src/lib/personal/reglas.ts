@@ -71,6 +71,29 @@ export const UMBRAL_SALDO_ALTO = 15;
  */
 export const CODIGO_TARDANZA_INJUSTIFICADA = "tardanza_injustificada";
 
+/**
+ * Contador informativo de horas extra acumuladas en la ficha de la persona
+ * (a pedido de Dante: "no tengo como contabilizar el total... de las horas
+ * extras trabajadas") — mismo patrón que minutosTardanza: se suma la
+ * cantidad de todas las novedades de este tipo, nunca toca el saldo en
+ * días (es neutro, ver catálogo).
+ */
+export const CODIGO_HORA_EXTRA_TRABAJADA = "hora_extra_trabajada";
+
+/**
+ * "90" -> "1 h 30 min". El acumulado de horas extra es histórico (nunca se
+ * resetea, mismo criterio que el saldo en días) y en la práctica puede
+ * juntar varias horas — mostrarlo en minutos crudos (ej. "600 min") es
+ * mucho menos legible que "10 h".
+ */
+export function formatearMinutosComoHoras(minutos: number): string {
+  const horas = Math.floor(minutos / 60);
+  const resto = minutos % 60;
+  if (horas === 0) return `${resto} min`;
+  if (resto === 0) return `${horas} h`;
+  return `${horas} h ${resto} min`;
+}
+
 export function esAdministracion(nombreDeArea: string): boolean {
   return nombreDeArea.trim().toLowerCase() === "administración";
 }

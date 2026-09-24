@@ -6,6 +6,7 @@ import {
   DIAS_SEMANA,
   formatearHora,
   formatearFecha,
+  formatearMinutosComoHoras,
 } from "@/lib/personal/reglas";
 
 export default async function FichaPersonalPage({
@@ -20,7 +21,14 @@ export default async function FichaPersonalPage({
   const ficha = await obtenerFichaPersonal(id);
   if (!ficha) notFound();
 
-  const { operario, horarios, movimientos, saldo, minutosTardanza } = ficha;
+  const {
+    operario,
+    horarios,
+    movimientos,
+    saldo,
+    minutosTardanza,
+    minutosExtra,
+  } = ficha;
   const area = (operario as unknown as { areas: { nombre: string } | null })
     .areas;
 
@@ -48,6 +56,11 @@ export default async function FichaPersonalPage({
           {minutosTardanza > 0 && (
             <p className="text-xs opacity-60">
               {minutosTardanza} min de tardanza acumulados
+            </p>
+          )}
+          {minutosExtra > 0 && (
+            <p className="text-xs text-positivo">
+              {formatearMinutosComoHoras(minutosExtra)} de hora extra acumulados
             </p>
           )}
         </div>
