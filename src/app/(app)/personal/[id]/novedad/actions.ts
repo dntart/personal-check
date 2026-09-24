@@ -4,8 +4,17 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { obtenerSesion } from "@/lib/supabase/sesion";
 import { registrarAuditoria } from "@/lib/personal/auditoria";
-import { obtenerSaldoOperario, obtenerEmailsAdmins } from "@/lib/personal/data";
-import { UMBRAL_SALDO_ALTO, esBloque30 } from "@/lib/personal/reglas";
+import {
+  obtenerSaldoOperario,
+  obtenerMinutosExtraOperario,
+  obtenerEmailsAdmins,
+} from "@/lib/personal/data";
+import {
+  UMBRAL_SALDO_ALTO,
+  UMBRAL_HORAS_EXTRA_ALTO,
+  esBloque30,
+  formatearMinutosComoHoras,
+} from "@/lib/personal/reglas";
 import { enviarEmail } from "@/lib/resend";
 import { cargarNovedadSchema } from "@/lib/validations/personal";
 
@@ -100,7 +109,10 @@ export async function cargarNovedad(
     datosNuevos: parsed.data,
   });
 
-  await avisarSiSaldoFueraDeRango(operarioId, sesion.organizacionNombre);
+  await Promise.all([
+    avisarSiSaldoFueraDeRango(operarioId, sesion.organizacionNombre),
+    avisarSiHorasExtraAltas(operarioId, sesion.organizacionNombre),
+  ]);
 
   redirect(`/personal/${operarioId}`);
 }
@@ -138,5 +150,40 @@ export async function avisarSiSaldoFueraDeRango(
     });
   } catch (err) {
     console.error("No se pudo evaluar/enviar la alerta de saldo:", err);
+  }
+}
+
+/**
+ * A pedido de Dante (2026-09-24): "cuando un personal acumule más de 4
+ * horas... podría cambiarse por un día completo a favor". Mismo mecanismo
+ * que avisarSiSaldoFueraDeRango — no bloquea la carga si el email falla.
+ */
+export async function avisarSiHorasExtraAltas(
+  operarioId: string,
+  organizacionNombre: string,
+) {
+  try {
+    const supabase = await createClient();
+    const [minutos, emails, { data: operario }] = await Promise.all([
+      obtenerMinutosExtraOperario(operarioId),
+      obtenerEmailsAdmins(),
+      supabase
+        .from("operarios")
+        .select("nombre")
+        .eq("id", operarioId)
+        .maybeSingle(),
+    ]);
+
+    if (minutos < UMBRAL_HORAS_EXTRA_ALTO) return;
+
+    const acumulado = formatearMinutosComoHoras(minutos);
+
+    await enviarEmail({
+      to: emails,
+      subject: `PersonalCheck — Horas extra acumuladas: ${operario?.nombre ?? "una persona"}`,
+      text: `${operario?.nombre ?? "Una persona"} tiene ${acumulado} de horas extra acumuladas en ${organizacionNombre} — podrían cambiarse por un día completo a favor.\n\nRevisalo en la ficha de la persona en PersonalCheck.`,
+    });
+  } catch (err) {
+    console.error("No se pudo evaluar/enviar la alerta de horas extra:", err);
   }
 }

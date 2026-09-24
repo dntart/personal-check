@@ -61,6 +61,15 @@ export function calcularEfecto(
 export const UMBRAL_SALDO_ALTO = 15;
 
 /**
+ * A partir de cuántos minutos acumulados de "Hora extra trabajada" avisar
+ * (spec/pedido de Dante, 2026-09-24: "cuando un personal acumule más de 4
+ * horas... podría cambiarse por un día completo a favor"). Mismo mecanismo
+ * que UMBRAL_SALDO_ALTO: alimenta tanto la campanita de alertas como el
+ * mail que se manda a los Admin al cargar/corregir una novedad.
+ */
+export const UMBRAL_HORAS_EXTRA_ALTO = 240; // 4 horas, en minutos
+
+/**
  * Tardanza se separa en injustificada/justificada (decisión de negocio que
  * reemplaza a la de spec sección 5/9 — a veces la demora es por una causa
  * ajena a la persona, ej: no le entregaron la llave, y no debería anotarse

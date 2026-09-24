@@ -3,31 +3,45 @@ import { createClient } from "@/lib/supabase/server";
 import {
   calcularEfecto,
   UMBRAL_SALDO_ALTO,
+  UMBRAL_HORAS_EXTRA_ALTO,
   CODIGO_TARDANZA_INJUSTIFICADA,
   CODIGO_HORA_EXTRA_TRABAJADA,
 } from "./reglas";
 import { agruparParaNomina, type AreaNomina } from "./nomina";
 
 /**
- * Alertas (spec sección 5, campanita del dashboard): saldo negativo, o
- * saldo ≥ umbral configurable (default 15 días, evita que un crédito
- * gigante pase desapercibido). Query liviana — la usa el nav en cada
- * página, no solo el dashboard.
+ * Alertas (spec sección 5, campanita del dashboard): saldo negativo, saldo
+ * ≥ umbral configurable (default 15 días, evita que un crédito gigante pase
+ * desapercibido), o acumulado de horas extra ≥ 4hs (AGREGADO 2026-09-24 —
+ * podría cambiarse por un día completo a favor). Cuenta personas, no
+ * eventos — alguien con los dos problemas a la vez suma una sola alerta.
+ * Query liviana — la usa el nav en cada página, no solo el dashboard.
  */
 export async function obtenerAlertas(): Promise<number> {
   const supabase = await createClient();
   const { data } = await supabase
     .from("movimientos")
-    .select("operario_id, cantidad, tipos_movimiento(impacto, unidad)")
+    .select("operario_id, cantidad, tipos_movimiento(impacto, unidad, codigo)")
     .is("deleted_at", null);
 
   const saldoPorOperario = new Map<string, number>();
+  const minutosExtraPorOperario = new Map<string, number>();
   for (const m of data ?? []) {
     const tipo = m.tipos_movimiento as unknown as {
       impacto: "suma" | "resta" | "neutro";
       unidad: "dias" | "minutos";
+      codigo: string;
     } | null;
-    if (!tipo || tipo.unidad !== "dias") continue;
+    if (!tipo) continue;
+    if (tipo.unidad === "minutos") {
+      if (tipo.codigo === CODIGO_HORA_EXTRA_TRABAJADA) {
+        minutosExtraPorOperario.set(
+          m.operario_id,
+          (minutosExtraPorOperario.get(m.operario_id) ?? 0) + m.cantidad,
+        );
+      }
+      continue;
+    }
     saldoPorOperario.set(
       m.operario_id,
       (saldoPorOperario.get(m.operario_id) ?? 0) +
@@ -35,11 +49,16 @@ export async function obtenerAlertas(): Promise<number> {
     );
   }
 
-  let alertas = 0;
-  for (const saldo of saldoPorOperario.values()) {
-    if (saldo < 0 || saldo >= UMBRAL_SALDO_ALTO) alertas++;
+  const operariosConAlerta = new Set<string>();
+  for (const [operarioId, saldo] of saldoPorOperario) {
+    if (saldo < 0 || saldo >= UMBRAL_SALDO_ALTO) {
+      operariosConAlerta.add(operarioId);
+    }
   }
-  return alertas;
+  for (const [operarioId, minutos] of minutosExtraPorOperario) {
+    if (minutos >= UMBRAL_HORAS_EXTRA_ALTO) operariosConAlerta.add(operarioId);
+  }
+  return operariosConAlerta.size;
 }
 
 /**
@@ -100,6 +119,7 @@ export async function obtenerNomina(): Promise<AreaNomina[]> {
 
   const saldoPorOperario = new Map<string, number>();
   const minutosTardanzaPorOperario = new Map<string, number>();
+  const minutosExtraPorOperario = new Map<string, number>();
   for (const m of movimientos) {
     const tipo = m.tipos_movimiento as unknown as {
       impacto: "suma" | "resta" | "neutro";
@@ -117,6 +137,11 @@ export async function obtenerNomina(): Promise<AreaNomina[]> {
           m.operario_id,
           (minutosTardanzaPorOperario.get(m.operario_id) ?? 0) + m.cantidad,
         );
+      } else if (tipo.codigo === CODIGO_HORA_EXTRA_TRABAJADA) {
+        minutosExtraPorOperario.set(
+          m.operario_id,
+          (minutosExtraPorOperario.get(m.operario_id) ?? 0) + m.cantidad,
+        );
       }
       continue;
     }
@@ -133,6 +158,7 @@ export async function obtenerNomina(): Promise<AreaNomina[]> {
     horariosPorOperario,
     saldoPorOperario,
     minutosTardanzaPorOperario,
+    minutosExtraPorOperario,
   );
 }
 
@@ -237,6 +263,31 @@ export async function obtenerSaldoOperario(
     saldo += calcularEfecto(tipo.impacto, m.cantidad);
   }
   return saldo;
+}
+
+/**
+ * Minutos acumulados de "Hora extra trabajada" de una persona (histórico,
+ * igual que obtenerSaldoOperario pero para este tipo puntual) — la usa el
+ * aviso por mail de horas extra altas (2026-09-24).
+ */
+export async function obtenerMinutosExtraOperario(
+  operarioId: string,
+): Promise<number> {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("movimientos")
+    .select("cantidad, tipos_movimiento(codigo)")
+    .eq("operario_id", operarioId)
+    .is("deleted_at", null);
+
+  let minutos = 0;
+  for (const m of data ?? []) {
+    const tipo = m.tipos_movimiento as unknown as { codigo: string } | null;
+    if (tipo?.codigo === CODIGO_HORA_EXTRA_TRABAJADA) {
+      minutos += m.cantidad;
+    }
+  }
+  return minutos;
 }
 
 /** Emails de los Admin de organización (no Supervisores) para alertas. */

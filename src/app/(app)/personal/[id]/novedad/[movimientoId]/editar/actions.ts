@@ -6,7 +6,10 @@ import { obtenerSesion } from "@/lib/supabase/sesion";
 import { registrarAuditoria } from "@/lib/personal/auditoria";
 import { editarNovedadSchema } from "@/lib/validations/personal";
 import { esBloque30 } from "@/lib/personal/reglas";
-import { avisarSiSaldoFueraDeRango } from "../../actions";
+import {
+  avisarSiSaldoFueraDeRango,
+  avisarSiHorasExtraAltas,
+} from "../../actions";
 
 export type EstadoEditarNovedad = { error: string } | null;
 
@@ -116,7 +119,10 @@ export async function editarNovedad(
     },
   });
 
-  await avisarSiSaldoFueraDeRango(operarioId, sesion.organizacionNombre);
+  await Promise.all([
+    avisarSiSaldoFueraDeRango(operarioId, sesion.organizacionNombre),
+    avisarSiHorasExtraAltas(operarioId, sesion.organizacionNombre),
+  ]);
 
   redirect(`/personal/${operarioId}`);
 }

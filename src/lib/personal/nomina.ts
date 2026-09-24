@@ -2,6 +2,7 @@ import {
   calcularTurno,
   esAdministracion,
   UMBRAL_SALDO_ALTO,
+  UMBRAL_HORAS_EXTRA_ALTO,
   type Turno,
 } from "./reglas";
 
@@ -17,6 +18,7 @@ export type PersonaNomina = {
   nombre: string;
   saldo: number;
   minutosTardanza: number;
+  minutosExtra: number;
   dias: DiaCelda[];
 };
 
@@ -55,6 +57,7 @@ export function agruparParaNomina(
   horariosPorOperario: Map<string, HorarioBase[]>,
   saldoPorOperario: Map<string, number>,
   minutosTardanzaPorOperario: Map<string, number>,
+  minutosExtraPorOperario: Map<string, number>,
 ): AreaNomina[] {
   // `operarios` ya viene filtrado por RLS a lo que la sesión actual puede
   // ver — un área sin nadie ahí (porque no hay personal, o porque un
@@ -76,6 +79,7 @@ export function agruparParaNomina(
         const saldo = saldoPorOperario.get(operario.id) ?? 0;
         const minutosTardanza =
           minutosTardanzaPorOperario.get(operario.id) ?? 0;
+        const minutosExtra = minutosExtraPorOperario.get(operario.id) ?? 0;
 
         if (horarios.length === 0) {
           sinHorario.push({
@@ -83,6 +87,7 @@ export function agruparParaNomina(
             nombre: operario.nombre,
             saldo,
             minutosTardanza,
+            minutosExtra,
             dias: [],
           });
           continue;
@@ -116,6 +121,7 @@ export function agruparParaNomina(
             nombre: operario.nombre,
             saldo,
             minutosTardanza,
+            minutosExtra,
             dias: armarDias(null),
           });
           continue;
@@ -127,6 +133,7 @@ export function agruparParaNomina(
             nombre: operario.nombre,
             saldo,
             minutosTardanza,
+            minutosExtra,
             dias: armarDias("manana"),
           });
         }
@@ -136,6 +143,7 @@ export function agruparParaNomina(
             nombre: operario.nombre,
             saldo,
             minutosTardanza,
+            minutosExtra,
             dias: armarDias("tarde"),
           });
         }
@@ -174,7 +182,11 @@ export function filtrarNomina(
   const cumple = (p: PersonaNomina) => {
     if (filtro === "negativo") return p.saldo < 0;
     if (filtro === "positivo") return p.saldo > 0;
-    return p.saldo < 0 || p.saldo >= UMBRAL_SALDO_ALTO;
+    return (
+      p.saldo < 0 ||
+      p.saldo >= UMBRAL_SALDO_ALTO ||
+      p.minutosExtra >= UMBRAL_HORAS_EXTRA_ALTO
+    );
   };
 
   return areas

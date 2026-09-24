@@ -187,6 +187,7 @@ El saldo de cada persona **nunca se calcula a partir del reloj de fichaje**. Se 
 
 - Saldo negativo → alerta
 - Saldo ≥ umbral configurable (default: 15 días) → alerta de "revisar" (evita que un crédito gigante pase desapercibido, ej. casos reales del taller con +36/+37 días)
+- **AGREGADO 2026-09-24**: horas extra acumuladas ≥ umbral configurable (default: 4hs = 240 min, `UMBRAL_HORAS_EXTRA_ALTO`) → misma alerta de "revisar" — a pedido de Dante ("podría cambiarse por un día completo a favor"). Al cargar o corregir una novedad de "Hora extra trabajada" que deje a la persona en o por encima del umbral, además se manda un mail a los Admin de la organización (mismo mecanismo que la alerta de saldo). La campanita cuenta **personas**, no eventos — alguien con saldo alto y horas extra altas a la vez suma una sola alerta, no dos.
 
 **Informes**, exportables en **PDF o Excel**, filtrables por **mes** y por **tipo**:
 
