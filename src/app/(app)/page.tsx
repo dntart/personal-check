@@ -6,8 +6,7 @@ import {
   obtenerUltimasNovedades,
   obtenerOperariosActivos,
 } from "@/lib/personal/data";
-import { InformeDescarga } from "@/components/InformeDescarga";
-import { formatearFecha } from "@/lib/personal/reglas";
+import { PanelInformesYNovedades } from "@/components/PanelInformesYNovedades";
 
 const FORMATO_FECHA = new Intl.DateTimeFormat("es-AR", {
   day: "numeric",
@@ -81,58 +80,11 @@ export default async function DashboardPage() {
       )}
 
       {sesion.tipo === "admin" && (
-        <section className="mt-8">
-          <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
-            <h2 className="text-sm font-semibold uppercase tracking-wide opacity-70">
-              Últimas novedades cargadas
-            </h2>
-            <div className="flex flex-wrap gap-2">
-              <InformeDescarga
-                organizacionNombre={sesion.organizacionNombre}
-                operarios={operarios}
-              />
-              <Link
-                href="/nomina"
-                className="rounded-sm border border-borde px-3 py-1.5 text-sm hover:bg-papel"
-              >
-                Ver nómina
-              </Link>
-            </div>
-          </div>
-
-          {novedades.length === 0 ? (
-            <p className="text-sm opacity-70">
-              Todavía no hay novedades cargadas.
-            </p>
-          ) : (
-            <div className="overflow-x-auto rounded-sm border border-borde">
-              <table className="w-full border-collapse text-sm">
-                <tbody>
-                  {novedades.map((n) => (
-                    <tr
-                      key={n.id}
-                      className="border-b border-borde/50 last:border-0"
-                    >
-                      <td className="whitespace-nowrap px-3 py-2 font-medium">
-                        {n.operarioNombre}
-                      </td>
-                      <td className="px-3 py-2 opacity-80">
-                        {n.tipoNombre}
-                        {n.observaciones ? ` — ${n.observaciones}` : ""}
-                      </td>
-                      <td className="whitespace-nowrap px-3 py-2 opacity-60">
-                        {n.cargadoPor}
-                      </td>
-                      <td className="whitespace-nowrap px-3 py-2 text-right font-mono opacity-60">
-                        {formatearFecha(n.fecha)}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </section>
+        <PanelInformesYNovedades
+          organizacionNombre={sesion.organizacionNombre}
+          operarios={operarios}
+          novedades={novedades}
+        />
       )}
     </div>
   );

@@ -65,9 +65,17 @@ type Operario = { id: string; nombre: string };
 export function InformeDescarga({
   organizacionNombre,
   operarios,
+  onPreviewActivoChange,
 }: {
   organizacionNombre: string;
   operarios: Operario[];
+  /**
+   * Avisa al padre si hay una vista previa mostrándose (a pedido del
+   * usuario: con pocos resultados, el informe queda "perdido" contra la
+   * tabla grande de "Últimas novedades cargadas" de más abajo — el padre
+   * usa esto para atenuarla mientras hay un informe en pantalla).
+   */
+  onPreviewActivoChange?: (activo: boolean) => void;
 }) {
   const [abierto, setAbierto] = useState(false);
   const [mesElegido, setMesElegido] = useState(0);
@@ -96,6 +104,7 @@ export function InformeDescarga({
   function invalidarPreview() {
     setPreview(null);
     setError(null);
+    onPreviewActivoChange?.(false);
   }
 
   function toggleCodigo(codigo: string) {
@@ -136,6 +145,7 @@ export function InformeDescarga({
         return;
       }
       setPreview(datos);
+      onPreviewActivoChange?.(true);
     } catch {
       setError("No se pudo generar la vista previa.");
     } finally {
