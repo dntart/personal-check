@@ -18,9 +18,10 @@ export async function obtenerDatosInformeAction(
   anio: number,
   params: ParametrosInforme,
   incluirResumen: boolean,
+  operario?: { id: string; nombre: string },
 ): Promise<DatosInforme | { error: string }> {
   const sesion = await obtenerSesion();
   if (!sesion) return { error: "No hay sesión activa." };
 
-  return obtenerInforme(mes, anio, params, incluirResumen);
+  return obtenerInforme(mes, anio, params, incluirResumen, operario);
 }

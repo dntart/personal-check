@@ -4,6 +4,7 @@ import { obtenerSesion } from "@/lib/supabase/sesion";
 import {
   obtenerEstadisticasDashboard,
   obtenerUltimasNovedades,
+  obtenerOperariosActivos,
 } from "@/lib/personal/data";
 import { InformeDescarga } from "@/components/InformeDescarga";
 import { formatearFecha } from "@/lib/personal/reglas";
@@ -18,13 +19,14 @@ export default async function DashboardPage() {
   if (!sesion) redirect("/login");
   if (sesion.tipo === "super_admin") redirect("/super-admin");
 
-  const [stats, novedades] =
+  const [stats, novedades, operarios] =
     sesion.tipo === "admin"
       ? await Promise.all([
           obtenerEstadisticasDashboard(),
           obtenerUltimasNovedades(),
+          obtenerOperariosActivos(),
         ])
-      : [null, []];
+      : [null, [], []];
 
   return (
     <div className="flex flex-1 flex-col p-4 sm:p-6">
@@ -85,7 +87,10 @@ export default async function DashboardPage() {
               Últimas novedades cargadas
             </h2>
             <div className="flex flex-wrap gap-2">
-              <InformeDescarga organizacionNombre={sesion.organizacionNombre} />
+              <InformeDescarga
+                organizacionNombre={sesion.organizacionNombre}
+                operarios={operarios}
+              />
               <Link
                 href="/nomina"
                 className="rounded-sm border border-borde px-3 py-1.5 text-sm hover:bg-papel"

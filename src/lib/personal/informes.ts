@@ -84,6 +84,9 @@ function cumpleFiltro(tipoMov: TipoMov | null, params: ParametrosInforme) {
  * mes y por tipo — agregado (general/a favor/a descontar) o una selección
  * de tipos de novedad específicos. El resumen histórico es opcional
  * (`incluirResumen`) — antes se imprimía siempre, ahora es una elección.
+ * AGREGADO 2026-09-25: filtro opcional por persona puntual (ej. "cuántos
+ * permisos se tomó Ada en particular") — se combina con el filtro de tipo,
+ * no lo reemplaza.
  *
  * El detalle es del mes elegido; el resumen (cuando se pide) es histórico
  * acumulado, no acotado al mes (spec sección 5).
@@ -93,6 +96,7 @@ export async function obtenerInforme(
   anio: number,
   params: ParametrosInforme,
   incluirResumen: boolean,
+  operario?: { id: string; nombre: string },
 ): Promise<DatosInforme> {
   const supabase = await createClient();
 
@@ -100,24 +104,28 @@ export async function obtenerInforme(
   const hastaFecha = new Date(anio, mes, 1); // día 1 del mes siguiente
   const hasta = hastaFecha.toISOString().slice(0, 10);
 
+  let queryDelMes = supabase
+    .from("movimientos")
+    .select(
+      "id, operario_id, fecha, cantidad, observaciones, operarios(nombre), tipos_movimiento(codigo, nombre, impacto, unidad), admins(nombre)",
+    )
+    .is("deleted_at", null)
+    .gte("fecha", desde)
+    .lt("fecha", hasta)
+    .order("fecha");
+  if (operario) queryDelMes = queryDelMes.eq("operario_id", operario.id);
+
+  let queryTodos = supabase
+    .from("movimientos")
+    .select(
+      "operario_id, cantidad, tipos_movimiento(codigo, impacto, unidad), operarios(nombre)",
+    )
+    .is("deleted_at", null);
+  if (operario) queryTodos = queryTodos.eq("operario_id", operario.id);
+
   const [delMesRes, todosRes] = await Promise.all([
-    supabase
-      .from("movimientos")
-      .select(
-        "id, operario_id, fecha, cantidad, observaciones, operarios(nombre), tipos_movimiento(codigo, nombre, impacto, unidad), admins(nombre)",
-      )
-      .is("deleted_at", null)
-      .gte("fecha", desde)
-      .lt("fecha", hasta)
-      .order("fecha"),
-    incluirResumen
-      ? supabase
-          .from("movimientos")
-          .select(
-            "operario_id, cantidad, tipos_movimiento(codigo, impacto, unidad), operarios(nombre)",
-          )
-          .is("deleted_at", null)
-      : Promise.resolve({ data: [] }),
+    queryDelMes,
+    incluirResumen ? queryTodos : Promise.resolve({ data: [] }),
   ]);
 
   const delMes = (delMesRes.data ?? []) as unknown as MovimientoCrudo[];
@@ -194,11 +202,14 @@ export async function obtenerInforme(
       .sort((a, b) => a.nombre.localeCompare(b.nombre));
   }
 
-  const filtroLabel =
+  const filtroTipo =
     params.modo === "agregado"
       ? LABEL_AGREGADO[params.agregado]
       : params.codigos.map((c) => LABELS_POR_CODIGO[c] ?? c).join(" + ") ||
         "Sin tipos elegidos";
+  const filtroLabel = operario
+    ? `${filtroTipo} — ${operario.nombre}`
+    : filtroTipo;
 
   return { mes, anio, filtroLabel, movimientos, resumen };
 }

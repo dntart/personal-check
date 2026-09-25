@@ -312,6 +312,22 @@ export async function obtenerAreas() {
 }
 
 /**
+ * Lista chica de personas para el filtro por persona de los informes
+ * (AGREGADO 2026-09-25) — RLS ya limita esto a lo que la sesión puede ver
+ * (un Supervisor solo su(s) área(s) asignada(s)), igual que el resto.
+ */
+export async function obtenerOperariosActivos() {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("operarios")
+    .select("id, nombre")
+    .is("deleted_at", null)
+    .eq("activo", true)
+    .order("nombre");
+  return data ?? [];
+}
+
+/**
  * Áreas que la sesión actual puede usar para asignar personal. Un Admin de
  * organización ve todas; un Supervisor solo las que le asignaron
  * (admin_areas) — la tabla `areas` en sí no está particionada por RLS

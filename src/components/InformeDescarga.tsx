@@ -60,10 +60,14 @@ function ultimos12Meses() {
   return opciones;
 }
 
+type Operario = { id: string; nombre: string };
+
 export function InformeDescarga({
   organizacionNombre,
+  operarios,
 }: {
   organizacionNombre: string;
+  operarios: Operario[];
 }) {
   const [abierto, setAbierto] = useState(false);
   const [mesElegido, setMesElegido] = useState(0);
@@ -72,6 +76,10 @@ export function InformeDescarga({
   const [codigosElegidos, setCodigosElegidos] = useState<Set<string>>(
     new Set(),
   );
+  // "" = todas las personas. Se combina con el filtro de tipo (no lo
+  // reemplaza) — a pedido del usuario, para ver ej. cuántos permisos se
+  // tomó una persona en particular.
+  const [operarioId, setOperarioId] = useState("");
   const [incluirResumen, setIncluirResumen] = useState(false);
   // La vista previa ES la confirmación: no se descarga nada hasta que el
   // admin vea exactamente qué va a bajar y toque un botón de descarga
@@ -115,11 +123,13 @@ export function InformeDescarga({
     setError(null);
     setCargandoPreview(true);
     try {
+      const operario = operarios.find((o) => o.id === operarioId);
       const datos = await obtenerDatosInformeAction(
         mes,
         anio,
         params,
         incluirResumen,
+        operario,
       );
       if ("error" in datos) {
         setError(datos.error);
@@ -176,6 +186,22 @@ export function InformeDescarga({
           {meses.map((m, i) => (
             <option key={i} value={i}>
               {m.label}
+            </option>
+          ))}
+        </select>
+
+        <select
+          value={operarioId}
+          onChange={(e) => {
+            setOperarioId(e.target.value);
+            invalidarPreview();
+          }}
+          className="rounded-sm border border-borde bg-superficie px-2 py-1 text-sm"
+        >
+          <option value="">Todas las personas</option>
+          {operarios.map((o) => (
+            <option key={o.id} value={o.id}>
+              {o.nombre}
             </option>
           ))}
         </select>
