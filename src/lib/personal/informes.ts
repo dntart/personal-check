@@ -31,6 +31,7 @@ export type MovimientoInforme = {
   operarioNombre: string;
   tipoNombre: string;
   tipoUnidad: "dias" | "minutos";
+  tipoImpacto: "suma" | "resta" | "neutro";
   cantidad: number;
   observaciones: string | null;
   cargadoPor: string;
@@ -169,6 +170,7 @@ export async function obtenerInforme(
       operarioNombre: m.operarios?.nombre ?? "—",
       tipoNombre: m.tipos_movimiento?.nombre ?? "—",
       tipoUnidad: m.tipos_movimiento?.unidad ?? "dias",
+      tipoImpacto: m.tipos_movimiento?.impacto ?? "neutro",
       cantidad: m.cantidad,
       observaciones: m.observaciones,
       cargadoPor: m.admins?.nombre ?? "—",

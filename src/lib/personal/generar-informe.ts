@@ -16,10 +16,35 @@ function nombreArchivo(datos: DatosInforme, extension: string) {
 
 // Exportadas para que la vista previa (InformeDescarga) muestre exactamente
 // el mismo formato que termina en el PDF/Excel — una sola fuente de verdad.
+
+/**
+ * Formatea la cantidad de UNA novedad puntual, con el signo que
+ * corresponde a su efecto real en el saldo — no el signo del número crudo
+ * guardado (que siempre es positivo, ej. "1" para un día compensado
+ * tomado). Bug real reportado: "Día compensado tomado" (RESTA un día del
+ * saldo) mostraba "+1", que se prestaba a confusión — ahora muestra "-1".
+ * "neutro" no fuerza ningún signo — esa cantidad no afecta el saldo (ej.
+ * minutos de tardanza), no tiene sentido sugerir un + o un -.
+ */
 export function formatearCantidad(
   cantidad: number,
   unidad: "dias" | "minutos",
+  impacto: "suma" | "resta" | "neutro",
 ) {
+  const valor = impacto === "resta" ? -Math.abs(cantidad) : cantidad;
+  const signo = impacto !== "neutro" && valor > 0 ? "+" : "";
+  return `${signo}${valor} ${unidad === "minutos" ? "min" : "días"}`;
+}
+
+/**
+ * Formatea un TOTAL ya agregado (resumen histórico) — a diferencia de
+ * formatearCantidad, acá el número que llega ya tiene el signo correcto
+ * resuelto por quien lo calculó (informes.ts: neto con calcularEfecto en
+ * modo agregado, suma cruda en modo específico — no hay un "impacto" único
+ * cuando el resumen combina más de un tipo de novedad a la vez), así que
+ * solo hace falta anteponerle el "+" si es positivo.
+ */
+function formatearMonto(cantidad: number, unidad: "dias" | "minutos") {
   const signo = cantidad > 0 ? "+" : "";
   return `${signo}${cantidad} ${unidad === "minutos" ? "min" : "días"}`;
 }
@@ -27,7 +52,7 @@ export function formatearCantidad(
 /** "—" si el total es 0 — evita imprimir "0 días" en una fila que en
  * realidad solo tiene minutos (o viceversa). */
 export function celdaResumen(total: number, unidad: "dias" | "minutos") {
-  return total === 0 ? "—" : formatearCantidad(total, unidad);
+  return total === 0 ? "—" : formatearMonto(total, unidad);
 }
 
 export async function generarPdf(
@@ -53,7 +78,7 @@ export async function generarPdf(
     formatearFecha(m.fecha),
     m.operarioNombre,
     m.tipoNombre,
-    formatearCantidad(m.cantidad, m.tipoUnidad),
+    formatearCantidad(m.cantidad, m.tipoUnidad, m.tipoImpacto),
     m.observaciones ?? "",
     m.cargadoPor,
   ]);
@@ -104,7 +129,9 @@ export async function generarExcel(
       Fecha: formatearFecha(m.fecha),
       Persona: m.operarioNombre,
       Tipo: m.tipoNombre,
-      Cantidad: m.cantidad,
+      // Mismo criterio que en el PDF: el número refleja el efecto real en
+      // el saldo, no el valor crudo siempre-positivo guardado.
+      Cantidad: m.tipoImpacto === "resta" ? -Math.abs(m.cantidad) : m.cantidad,
       Unidad: m.tipoUnidad === "minutos" ? "minutos" : "días",
       Observaciones: m.observaciones ?? "",
       "Cargado por": m.cargadoPor,

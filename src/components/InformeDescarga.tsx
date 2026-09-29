@@ -363,7 +363,11 @@ export function InformeDescarga({
                       <td className="px-2 py-1.5">{m.operarioNombre}</td>
                       <td className="px-2 py-1.5">{m.tipoNombre}</td>
                       <td className="px-2 py-1.5 text-right font-mono whitespace-nowrap">
-                        {formatearCantidad(m.cantidad, m.tipoUnidad)}
+                        {formatearCantidad(
+                          m.cantidad,
+                          m.tipoUnidad,
+                          m.tipoImpacto,
+                        )}
                       </td>
                       <td className="px-2 py-1.5 opacity-80">
                         {m.observaciones ?? ""}
