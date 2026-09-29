@@ -174,10 +174,18 @@ export default async function FichaPersonalPage({
                   )}
                   <Link
                     href={`/personal/${id}/novedad/${m.id}/editar`}
-                    className="mt-1 inline-block text-xs text-acento underline transition-opacity hover:opacity-70"
+                    className="mt-1 mr-3 inline-block text-xs text-acento underline transition-opacity hover:opacity-70"
                   >
                     Corregir
                   </Link>
+                  {sesion.tipo === "admin" && sesion.rol === "admin" && (
+                    <Link
+                      href={`/personal/${id}/novedad/${m.id}/eliminar`}
+                      className="mt-1 inline-block text-xs text-negativo underline transition-opacity hover:opacity-70"
+                    >
+                      Eliminar
+                    </Link>
+                  )}
                 </li>
               );
             })}

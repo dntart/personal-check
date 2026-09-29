@@ -44,3 +44,8 @@ export const editarNovedadSchema = z.object({
   observaciones: z.string().trim().optional(),
   motivo: z.string().trim().min(1, "Contá brevemente qué se corrigió"),
 });
+
+export const eliminarNovedadSchema = z.object({
+  movimientoId: z.string().uuid(),
+  motivo: z.string().trim().min(1, "El motivo es obligatorio"),
+});
