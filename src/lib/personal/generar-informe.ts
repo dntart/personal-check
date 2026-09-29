@@ -4,24 +4,14 @@
 import type { DatosInforme } from "./informes";
 import { formatearFecha } from "./reglas";
 
-export const NOMBRE_MES = [
-  "Enero",
-  "Febrero",
-  "Marzo",
-  "Abril",
-  "Mayo",
-  "Junio",
-  "Julio",
-  "Agosto",
-  "Septiembre",
-  "Octubre",
-  "Noviembre",
-  "Diciembre",
-];
-
 function nombreArchivo(datos: DatosInforme, extension: string) {
-  const mesStr = String(datos.mes).padStart(2, "0");
-  return `personalcheck-${datos.anio}-${mesStr}.${extension}`;
+  // Informe de un mes puntual vs. año completo (AGREGADO 2026-09-29) —
+  // este último no tiene un "mes" que le corresponda.
+  if (datos.mes) {
+    const mesStr = String(datos.mes).padStart(2, "0");
+    return `personalcheck-${datos.anio}-${mesStr}.${extension}`;
+  }
+  return `personalcheck-${datos.anio}-completo.${extension}`;
 }
 
 // Exportadas para que la vista previa (InformeDescarga) muestre exactamente
@@ -51,7 +41,7 @@ export async function generarPdf(
 
   const doc = new jsPDF();
   const titulo = `Informe de novedades — ${datos.filtroLabel}`;
-  const subtitulo = `${organizacionNombre} — ${NOMBRE_MES[datos.mes - 1]} ${datos.anio}`;
+  const subtitulo = `${organizacionNombre} — ${datos.periodoLabel}`;
 
   doc.setFontSize(14);
   doc.text(titulo, 14, 18);
@@ -137,11 +127,7 @@ export async function generarExcel(
 
   XLSX.utils.sheet_add_aoa(
     hojaNovedades,
-    [
-      [
-        `${organizacionNombre} — ${NOMBRE_MES[datos.mes - 1]} ${datos.anio} — ${datos.filtroLabel}`,
-      ],
-    ],
+    [[`${organizacionNombre} — ${datos.periodoLabel} — ${datos.filtroLabel}`]],
     { origin: -1 },
   );
 

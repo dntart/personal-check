@@ -5,6 +5,7 @@ import {
   obtenerInforme,
   type DatosInforme,
   type ParametrosInforme,
+  type Periodo,
 } from "@/lib/personal/informes";
 
 /**
@@ -14,8 +15,7 @@ import {
  * aplicado normal.
  */
 export async function obtenerDatosInformeAction(
-  mes: number,
-  anio: number,
+  periodo: Periodo,
   params: ParametrosInforme,
   incluirResumen: boolean,
   operario?: { id: string; nombre: string },
@@ -23,5 +23,5 @@ export async function obtenerDatosInformeAction(
   const sesion = await obtenerSesion();
   if (!sesion) return { error: "No hay sesión activa." };
 
-  return obtenerInforme(mes, anio, params, incluirResumen, operario);
+  return obtenerInforme(periodo, params, incluirResumen, operario);
 }

@@ -7,13 +7,13 @@ import {
   generarExcel,
   formatearCantidad,
   celdaResumen,
-  NOMBRE_MES,
 } from "@/lib/personal/generar-informe";
-import { formatearFecha } from "@/lib/personal/reglas";
+import { formatearFecha, NOMBRE_MES } from "@/lib/personal/reglas";
 import type {
   DatosInforme,
   FiltroAgregado,
   ParametrosInforme,
+  Periodo,
 } from "@/lib/personal/informes";
 
 const AGREGADOS: { valor: FiltroAgregado; label: string }[] = [
@@ -46,18 +46,32 @@ const TIPOS_ESPECIFICOS: { codigo: string; label: string }[] = [
   { codigo: "cambio_horario", label: "Cambio de horario" },
 ];
 
-function ultimos12Meses() {
-  const opciones: { mes: number; anio: number; label: string }[] = [];
+// Valor del <select>: "anio" (año en curso completo, hasta hoy — AGREGADO
+// 2026-09-29 a pedido del usuario) o "mes-<año>-<mes>" (un mes puntual).
+function opcionesPeriodo() {
   const hoy = new Date();
+  const opciones: { valor: string; label: string }[] = [
+    { valor: "anio", label: `${hoy.getFullYear()} completo (hasta hoy)` },
+  ];
   for (let i = 0; i < 12; i++) {
     const d = new Date(hoy.getFullYear(), hoy.getMonth() - i, 1);
     opciones.push({
-      mes: d.getMonth() + 1,
-      anio: d.getFullYear(),
+      valor: `mes-${d.getFullYear()}-${d.getMonth() + 1}`,
       label: `${NOMBRE_MES[d.getMonth()]} ${d.getFullYear()}`,
     });
   }
   return opciones;
+}
+
+function parsePeriodo(valor: string): Periodo {
+  if (valor === "anio") return { anio: new Date().getFullYear() };
+  const [, anioStr, mesStr] = valor.split("-");
+  return { anio: Number(anioStr), mes: Number(mesStr) };
+}
+
+function periodoPorDefecto() {
+  const hoy = new Date();
+  return `mes-${hoy.getFullYear()}-${hoy.getMonth() + 1}`;
 }
 
 type Operario = { id: string; nombre: string };
@@ -78,7 +92,7 @@ export function InformeDescarga({
   onPreviewActivoChange?: (activo: boolean) => void;
 }) {
   const [abierto, setAbierto] = useState(false);
-  const [mesElegido, setMesElegido] = useState(0);
+  const [periodoValor, setPeriodoValor] = useState(periodoPorDefecto);
   const [modo, setModo] = useState<"agregado" | "especifico">("agregado");
   const [agregado, setAgregado] = useState<FiltroAgregado>("general");
   const [codigosElegidos, setCodigosElegidos] = useState<Set<string>>(
@@ -98,8 +112,7 @@ export function InformeDescarga({
   const [generando, setGenerando] = useState<"pdf" | "excel" | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const meses = ultimos12Meses();
-  const { mes, anio, label: labelMes } = meses[mesElegido];
+  const periodos = opcionesPeriodo();
 
   function invalidarPreview() {
     setPreview(null);
@@ -134,8 +147,7 @@ export function InformeDescarga({
     try {
       const operario = operarios.find((o) => o.id === operarioId);
       const datos = await obtenerDatosInformeAction(
-        mes,
-        anio,
+        parsePeriodo(periodoValor),
         params,
         incluirResumen,
         operario,
@@ -175,7 +187,7 @@ export function InformeDescarga({
       <button
         type="button"
         onClick={() => setAbierto(true)}
-        className="rounded-sm border border-borde px-3 py-1.5 text-sm hover:bg-papel"
+        className="rounded-sm bg-acento px-3 py-1.5 text-sm font-medium text-white transition-opacity hover:opacity-90"
       >
         Descargar resumen
       </button>
@@ -186,16 +198,16 @@ export function InformeDescarga({
     <div className="flex flex-col gap-3 rounded-sm border border-borde p-3">
       <div className="flex flex-wrap items-center gap-2">
         <select
-          value={mesElegido}
+          value={periodoValor}
           onChange={(e) => {
-            setMesElegido(Number(e.target.value));
+            setPeriodoValor(e.target.value);
             invalidarPreview();
           }}
           className="rounded-sm border border-borde bg-superficie px-2 py-1 text-sm"
         >
-          {meses.map((m, i) => (
-            <option key={i} value={i}>
-              {m.label}
+          {periodos.map((p) => (
+            <option key={p.valor} value={p.valor}>
+              {p.label}
             </option>
           ))}
         </select>
@@ -309,7 +321,7 @@ export function InformeDescarga({
       {preview && (
         <div className="flex flex-col gap-3 border-t border-borde pt-3">
           <p className="text-sm">
-            <strong>{labelMes}</strong> — {preview.filtroLabel} —{" "}
+            <strong>{preview.periodoLabel}</strong> — {preview.filtroLabel} —{" "}
             {preview.movimientos.length}{" "}
             {preview.movimientos.length === 1 ? "novedad" : "novedades"}
           </p>

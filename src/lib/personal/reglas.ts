@@ -4,6 +4,21 @@
 
 export type Turno = "manana" | "tarde";
 
+export const NOMBRE_MES = [
+  "Enero",
+  "Febrero",
+  "Marzo",
+  "Abril",
+  "Mayo",
+  "Junio",
+  "Julio",
+  "Agosto",
+  "Septiembre",
+  "Octubre",
+  "Noviembre",
+  "Diciembre",
+];
+
 export const DIAS_SEMANA: { valor: number; nombre: string; corto: string }[] = [
   { valor: 1, nombre: "Lunes", corto: "Lun" },
   { valor: 2, nombre: "Martes", corto: "Mar" },

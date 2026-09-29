@@ -1,8 +1,15 @@
 import "server-only";
 import { createClient } from "@/lib/supabase/server";
-import { calcularEfecto } from "./reglas";
+import { calcularEfecto, formatearFecha, NOMBRE_MES } from "./reglas";
 
 export type FiltroAgregado = "general" | "a_favor" | "a_descontar";
+
+/**
+ * Un mes puntual, o el año completo hasta hoy (AGREGADO 2026-09-29, a
+ * pedido del usuario: "generar reporte de todo el año hasta la fecha
+ * actual") — `mes` ausente/undefined es la señal de "año completo".
+ */
+export type Periodo = { anio: number; mes?: number };
 
 /**
  * Dos modos, no mezclables (evita la ambigüedad de qué significa "el
@@ -37,8 +44,9 @@ export type ResumenPersona = {
 };
 
 export type DatosInforme = {
-  mes: number;
   anio: number;
+  mes?: number; // undefined = informe de año completo
+  periodoLabel: string; // "Septiembre 2026" | "2026 completo — hasta el 29/09/2026"
   filtroLabel: string;
   movimientos: MovimientoInforme[];
   resumen: ResumenPersona[] | null; // null = no se pidió incluirlo
@@ -81,28 +89,51 @@ function cumpleFiltro(tipoMov: TipoMov | null, params: ParametrosInforme) {
 
 /**
  * Informes (spec sección 5, ampliado a pedido del usuario): filtrables por
- * mes y por tipo — agregado (general/a favor/a descontar) o una selección
- * de tipos de novedad específicos. El resumen histórico es opcional
- * (`incluirResumen`) — antes se imprimía siempre, ahora es una elección.
- * AGREGADO 2026-09-25: filtro opcional por persona puntual (ej. "cuántos
- * permisos se tomó Ada en particular") — se combina con el filtro de tipo,
- * no lo reemplaza.
+ * período y por tipo — agregado (general/a favor/a descontar) o una
+ * selección de tipos de novedad específicos. El resumen histórico es
+ * opcional (`incluirResumen`) — antes se imprimía siempre, ahora es una
+ * elección. AGREGADO 2026-09-25: filtro opcional por persona puntual (ej.
+ * "cuántos permisos se tomó Ada en particular") — se combina con el filtro
+ * de tipo, no lo reemplaza.
  *
- * El detalle es del mes elegido; el resumen (cuando se pide) es histórico
- * acumulado, no acotado al mes (spec sección 5).
+ * El detalle es del período elegido — un mes puntual, o el año completo
+ * hasta hoy (AGREGADO 2026-09-29, `periodo.mes` ausente); el resumen
+ * (cuando se pide) siempre es histórico acumulado total, sin acotar al
+ * período (spec sección 5) — eso no cambió.
  */
 export async function obtenerInforme(
-  mes: number,
-  anio: number,
+  periodo: Periodo,
   params: ParametrosInforme,
   incluirResumen: boolean,
   operario?: { id: string; nombre: string },
 ): Promise<DatosInforme> {
   const supabase = await createClient();
 
-  const desde = `${anio}-${String(mes).padStart(2, "0")}-01`;
-  const hastaFecha = new Date(anio, mes, 1); // día 1 del mes siguiente
-  const hasta = hastaFecha.toISOString().slice(0, 10);
+  const { anio, mes } = periodo;
+  let desde: string;
+  let hasta: string; // exclusivo
+  let periodoLabel: string;
+
+  if (mes) {
+    desde = `${anio}-${String(mes).padStart(2, "0")}-01`;
+    hasta = new Date(anio, mes, 1).toISOString().slice(0, 10); // día 1 del mes siguiente
+    periodoLabel = `${NOMBRE_MES[mes - 1]} ${anio}`;
+  } else {
+    // Año completo — si es el año en curso, hasta hoy inclusive (no tiene
+    // sentido "hasta el 31/12" de un año que todavía no terminó); si es un
+    // año anterior, el año completo sí.
+    desde = `${anio}-01-01`;
+    const hoyISO = new Date().toISOString().slice(0, 10);
+    if (anio === Number(hoyISO.slice(0, 4))) {
+      const mananaISO = new Date(hoyISO);
+      mananaISO.setUTCDate(mananaISO.getUTCDate() + 1);
+      hasta = mananaISO.toISOString().slice(0, 10);
+      periodoLabel = `${anio} completo — hasta el ${formatearFecha(hoyISO)}`;
+    } else {
+      hasta = `${anio + 1}-01-01`;
+      periodoLabel = `${anio} completo`;
+    }
+  }
 
   let queryDelMes = supabase
     .from("movimientos")
@@ -211,7 +242,7 @@ export async function obtenerInforme(
     ? `${filtroTipo} — ${operario.nombre}`
     : filtroTipo;
 
-  return { mes, anio, filtroLabel, movimientos, resumen };
+  return { anio, mes, periodoLabel, filtroLabel, movimientos, resumen };
 }
 
 // Catálogo fijo de novedades (spec sección 5) — evita una query extra solo

@@ -189,7 +189,7 @@ El saldo de cada persona **nunca se calcula a partir del reloj de fichaje**. Se 
 - Saldo ≥ umbral configurable (default: 15 días) → alerta de "revisar" (evita que un crédito gigante pase desapercibido, ej. casos reales del taller con +36/+37 días)
 - **AGREGADO 2026-09-24**: horas extra acumuladas ≥ umbral configurable (default: 4hs = 240 min, `UMBRAL_HORAS_EXTRA_ALTO`) → misma alerta de "revisar" — a pedido de Dante ("podría cambiarse por un día completo a favor"). Al cargar o corregir una novedad de "Hora extra trabajada" que deje a la persona en o por encima del umbral, además se manda un mail a los Admin de la organización (mismo mecanismo que la alerta de saldo). La campanita cuenta **personas**, no eventos — alguien con saldo alto y horas extra altas a la vez suma una sola alerta, no dos.
 
-**Informes**, exportables en **PDF o Excel**, filtrables por **mes** y por **tipo**:
+**Informes**, exportables en **PDF o Excel**, filtrables por **período** y por **tipo**:
 
 - General: todos los movimientos del mes + saldo acumulado por persona (histórico total, no solo del mes)
 - Solo días a favor: filtra movimientos con efecto positivo + total acumulado de días a favor por persona
@@ -199,6 +199,7 @@ El saldo de cada persona **nunca se calcula a partir del reloj de fichaje**. Se 
 - **AGREGADO 2026-09-25**: filtro opcional por **persona puntual**, combinable con el filtro de tipo (no lo reemplaza) — ej. "Septiembre 2026 — Tipos específicos — Salida anticipada justificada — Ada Ampuero" para ver cuántos permisos de ese tipo se tomó una persona en particular. El detalle y el resumen quedan acotados a esa persona; el título del PDF/Excel incluye su nombre.
 - El Excel se genera con dos hojas: **Novedades** (el detalle) y **Resumen** (el mismo total que el PDF)
 - **ACTUALIZADO 2026-09-18**: antes de descargar, "Ver vista previa" arma la misma consulta y muestra el detalle (y el resumen, si se pidió) como tabla en pantalla — recién ahí aparecen los botones "Descargar PDF"/"Descargar Excel", que usan esos mismos datos ya traídos (no vuelven a consultar). Cambiar cualquier filtro invalida la vista previa, para que nunca se pueda descargar algo que no coincide con lo último que se vio.
+- **AGREGADO 2026-09-29**: el selector de período admite, además de un mes puntual, **el año en curso completo hasta hoy** (ej. "2026 completo (hasta hoy)") — a pedido del usuario. Si se elige un año que ya terminó (no aplica hoy, pero queda previsto), el rango es el año completo; si es el año en curso, el corte es la fecha de hoy inclusive. El botón "Descargar resumen" pasa a tener el mismo peso visual que las demás acciones primarias (fondo de color, antes era un botón de borde) — a pedido del usuario, para que se note más.
 
 ---
 
