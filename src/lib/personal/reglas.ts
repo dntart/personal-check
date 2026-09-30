@@ -124,16 +124,28 @@ export function esAdministracion(nombreDeArea: string): boolean {
 
 /**
  * Tipos de novedad que se cargan en bloques de 30 minutos (30, 60, 90…),
- * no minuto a minuto como Tardanza — Salida anticipada (a pedido de Dante,
- * "podemos hacerla cada 30 minutos") y Hora extra trabajada (mismo
- * criterio, porque en la práctica los permisos/horas extra se dan en
- * medias horas). Un solo lugar para esta lista: la usan tanto los
- * formularios (para mostrar un <select> en vez de un número libre — un
- * <input type=number> con step no impide tipear cualquier valor a mano,
- * sobre todo en mobile) como las Server Actions (para no confiar solo en
- * el <select> del cliente).
+ * no minuto a minuto — Salida anticipada (a pedido de Dante, "podemos
+ * hacerla cada 30 minutos"), Hora extra trabajada (mismo criterio, porque
+ * en la práctica los permisos/horas extra se dan en medias horas), y
+ * AGREGADO 2026-09-30: Tardanza (injustificada/justificada) y Cambio de
+ * horario — a pedido explícito de Dante de que **todos** los tipos en
+ * minutos se carguen y se muestren en horas, con un desplegable de
+ * opciones en vez de un número libre. Son, sin excepción, TODOS los tipos
+ * de `unidad = 'minutos'` del catálogo — no hay ningún otro tipo en
+ * minutos que haya quedado afuera de esta lista.
+ *
+ * Un solo lugar para esta lista: la usan tanto los formularios (para
+ * mostrar un <select> en vez de un número libre — un <input type=number>
+ * con step no impide tipear cualquier valor a mano, sobre todo en mobile)
+ * como las Server Actions (para no confiar solo en el <select> del
+ * cliente).
  */
-const CODIGOS_BLOQUE_30 = ["hora_extra_trabajada"];
+const CODIGOS_BLOQUE_30 = [
+  "hora_extra_trabajada",
+  "tardanza_injustificada",
+  "tardanza_justificada",
+  "cambio_horario",
+];
 export function esBloque30(codigo: string | undefined): boolean {
   return (
     codigo !== undefined &&

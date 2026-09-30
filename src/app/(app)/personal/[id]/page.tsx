@@ -55,7 +55,8 @@ export default async function FichaPersonalPage({
           </p>
           {minutosTardanza > 0 && (
             <p className="text-xs opacity-60">
-              {minutosTardanza} min de tardanza acumulados
+              {formatearMinutosComoHoras(minutosTardanza)} de tardanza
+              acumulados
             </p>
           )}
           {minutosExtra > 0 && (
@@ -152,7 +153,9 @@ export default async function FichaPersonalPage({
                     </span>
                   </div>
                   <p className="mt-1 font-mono">
-                    {m.cantidad} {tipo?.unidad === "minutos" ? "min" : "días"}
+                    {tipo?.unidad === "minutos"
+                      ? formatearMinutosComoHoras(m.cantidad)
+                      : `${m.cantidad} días`}
                   </p>
                   <p className="mt-1 text-xs opacity-60">
                     Cargado por {admin?.nombre ?? "—"}

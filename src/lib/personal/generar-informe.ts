@@ -2,7 +2,7 @@
 // "PDF client-side (jsPDF, como en el prototipo)"). Los imports de jsPDF/
 // xlsx son dinámicos para no meterlos en el bundle inicial de cada página.
 import type { DatosInforme } from "./informes";
-import { formatearFecha } from "./reglas";
+import { formatearFecha, formatearMinutosComoHoras } from "./reglas";
 
 function nombreArchivo(datos: DatosInforme, extension: string) {
   // Informe de un mes puntual vs. año completo (AGREGADO 2026-09-29) —
@@ -18,26 +18,33 @@ function nombreArchivo(datos: DatosInforme, extension: string) {
 // el mismo formato que termina en el PDF/Excel — una sola fuente de verdad.
 
 /**
- * Formatea la cantidad de UNA novedad puntual, con el signo que
- * corresponde a su efecto real en el saldo — no el signo del número crudo
- * guardado (que siempre es positivo, ej. "1" para un día compensado
- * tomado). Bug real reportado: "Día compensado tomado" (RESTA un día del
- * saldo) mostraba "+1", que se prestaba a confusión — ahora muestra "-1".
- * "neutro" no fuerza ningún signo — esa cantidad no afecta el saldo (ej.
- * minutos de tardanza), no tiene sentido sugerir un + o un -.
+ * Formatea la cantidad de UNA novedad puntual. Para minutos, siempre en
+ * horas (ej. "1 h 30 min") — a pedido explícito de Dante, 2026-09-30: TODO
+ * tipo en minutos (Tardanza, Salida anticipada, Cambio de horario, Hora
+ * extra trabajada) se carga y se muestra en horas, no en minutos crudos.
+ * Ninguno de esos tipos tiene efecto en el saldo (todos son neutro), así
+ * que no hace falta pensar en signo para ese caso.
+ *
+ * Para días, el signo corresponde a su efecto real en el saldo — no el
+ * signo del número crudo guardado (que siempre es positivo, ej. "1" para
+ * un día compensado tomado). Bug real reportado: "Día compensado tomado"
+ * (RESTA un día del saldo) mostraba "+1", que se prestaba a confusión —
+ * ahora muestra "-1". "neutro" no fuerza ningún signo.
  */
 export function formatearCantidad(
   cantidad: number,
   unidad: "dias" | "minutos",
   impacto: "suma" | "resta" | "neutro",
 ) {
+  if (unidad === "minutos") return formatearMinutosComoHoras(cantidad);
   const valor = impacto === "resta" ? -Math.abs(cantidad) : cantidad;
   const signo = impacto !== "neutro" && valor > 0 ? "+" : "";
-  return `${signo}${valor} ${unidad === "minutos" ? "min" : "días"}`;
+  return `${signo}${valor} días`;
 }
 
 /**
- * Formatea un TOTAL ya agregado (resumen histórico) — a diferencia de
+ * Formatea un TOTAL ya agregado (resumen histórico). Para minutos, en
+ * horas, mismo criterio que formatearCantidad. Para días, a diferencia de
  * formatearCantidad, acá el número que llega ya tiene el signo correcto
  * resuelto por quien lo calculó (informes.ts: neto con calcularEfecto en
  * modo agregado, suma cruda en modo específico — no hay un "impacto" único
@@ -45,8 +52,9 @@ export function formatearCantidad(
  * solo hace falta anteponerle el "+" si es positivo.
  */
 function formatearMonto(cantidad: number, unidad: "dias" | "minutos") {
+  if (unidad === "minutos") return formatearMinutosComoHoras(cantidad);
   const signo = cantidad > 0 ? "+" : "";
-  return `${signo}${cantidad} ${unidad === "minutos" ? "min" : "días"}`;
+  return `${signo}${cantidad} días`;
 }
 
 /** "—" si el total es 0 — evita imprimir "0 días" en una fila que en
@@ -104,7 +112,7 @@ export async function generarPdf(
 
     autoTable(doc, {
       startY: finTabla + 16,
-      head: [["Persona", "Total días", "Total minutos"]],
+      head: [["Persona", "Total días", "Total horas"]],
       body: datos.resumen.map((r) => [
         r.nombre,
         celdaResumen(r.totalDias, "dias"),
@@ -129,10 +137,18 @@ export async function generarExcel(
       Fecha: formatearFecha(m.fecha),
       Persona: m.operarioNombre,
       Tipo: m.tipoNombre,
-      // Mismo criterio que en el PDF: el número refleja el efecto real en
-      // el saldo, no el valor crudo siempre-positivo guardado.
-      Cantidad: m.tipoImpacto === "resta" ? -Math.abs(m.cantidad) : m.cantidad,
-      Unidad: m.tipoUnidad === "minutos" ? "minutos" : "días",
+      // Mismo criterio que en el PDF: para días, el número refleja el
+      // efecto real en el saldo, no el valor crudo siempre-positivo
+      // guardado. Para minutos, en horas (decimal, ej. 1.5) — a pedido
+      // explícito de Dante — no como texto, para que siga siendo un
+      // número usable en Excel.
+      Cantidad:
+        m.tipoUnidad === "minutos"
+          ? Math.round((m.cantidad / 60) * 100) / 100
+          : m.tipoImpacto === "resta"
+            ? -Math.abs(m.cantidad)
+            : m.cantidad,
+      Unidad: m.tipoUnidad === "minutos" ? "horas" : "días",
       Observaciones: m.observaciones ?? "",
       "Cargado por": m.cargadoPor,
     })),
@@ -146,7 +162,8 @@ export async function generarExcel(
       datos.resumen.map((r) => ({
         Persona: r.nombre,
         "Total histórico (días)": r.totalDias,
-        "Total histórico (minutos)": r.totalMinutos,
+        "Total histórico (horas)":
+          Math.round((r.totalMinutos / 60) * 100) / 100,
       })),
     );
     XLSX.utils.book_append_sheet(libro, hojaResumen, "Resumen");

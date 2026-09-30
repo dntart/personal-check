@@ -2,7 +2,10 @@
 
 import { useActionState, useState } from "react";
 import { editarNovedad, type EstadoEditarNovedad } from "./actions";
-import { esBloque30, OPCIONES_BLOQUE_30 } from "@/lib/personal/reglas";
+import {
+  OPCIONES_BLOQUE_30,
+  formatearMinutosComoHoras,
+} from "@/lib/personal/reglas";
 
 type Tipo = {
   id: string;
@@ -20,10 +23,8 @@ type MovimientoActual = {
   adjuntoUrl: string | null;
 };
 
-function defaultDeCantidad(usaBloque30: boolean, esMinutos: boolean) {
-  if (usaBloque30) return 30;
-  if (esMinutos) return 10;
-  return 1;
+function defaultDeCantidad(esMinutos: boolean) {
+  return esMinutos ? 30 : 1;
 }
 
 /** Por si ya había una cantidad cargada que no es múltiplo de 30 (dato
@@ -54,13 +55,10 @@ export function EditarNovedadForm({
 
   const [tipoId, setTipoId] = useState(actual.tipoMovimientoId);
   const tipoSeleccionado = tipos.find((t) => t.id === tipoId);
+  // Todo tipo en minutos, sin excepción, se carga en horas por desplegable
+  // (2026-09-30, a pedido de Dante) — no hay ningún tipo del catálogo en
+  // minutos que se cargue distinto, así que alcanza con mirar la unidad.
   const esMinutos = tipoSeleccionado?.unidad === "minutos";
-  const esSalidaAnticipada = Boolean(
-    tipoSeleccionado?.codigo.startsWith("salida_anticipada"),
-  );
-  const esCambioHorario = tipoSeleccionado?.codigo === "cambio_horario";
-  const esHoraExtra = tipoSeleccionado?.codigo === "hora_extra_trabajada";
-  const usaBloque30 = esBloque30(tipoSeleccionado?.codigo);
 
   // Si todavía es el mismo tipo que ya tenía cargado, mantenemos la
   // cantidad tal cual estaba — si cambió a otro tipo, un valor por defecto
@@ -68,7 +66,7 @@ export function EditarNovedadForm({
   const cantidadPorDefecto =
     tipoId === actual.tipoMovimientoId
       ? actual.cantidad
-      : defaultDeCantidad(usaBloque30, esMinutos);
+      : defaultDeCantidad(esMinutos);
 
   return (
     <form action={formAction} className="flex flex-col gap-4">
@@ -107,17 +105,11 @@ export function EditarNovedadForm({
 
       <div className="flex flex-col gap-1.5">
         <label htmlFor="cantidad" className="text-sm font-medium">
-          {esSalidaAnticipada
-            ? "Minutos de salida anticipada"
-            : esCambioHorario
-              ? "Minutos de cambio de horario"
-              : esHoraExtra
-                ? "Minutos de hora extra trabajada"
-                : esMinutos
-                  ? "Minutos de tardanza"
-                  : "Cantidad (± días)"}
+          {esMinutos
+            ? `Horas de ${tipoSeleccionado?.nombre.toLowerCase()}`
+            : "Cantidad (± días)"}
         </label>
-        {usaBloque30 ? (
+        {esMinutos ? (
           <select
             key={tipoId}
             id="cantidad"
@@ -128,7 +120,7 @@ export function EditarNovedadForm({
           >
             {OPCIONES_BLOQUE_30.map((min) => (
               <option key={min} value={min}>
-                {min} min
+                {formatearMinutosComoHoras(min)}
               </option>
             ))}
           </select>
@@ -138,7 +130,7 @@ export function EditarNovedadForm({
             id="cantidad"
             name="cantidad"
             type="number"
-            step={esMinutos ? 1 : 0.5}
+            step={0.5}
             required
             defaultValue={cantidadPorDefecto}
             className="rounded-sm border border-borde bg-superficie px-3 py-2 text-sm font-mono outline-none focus:border-acento"
