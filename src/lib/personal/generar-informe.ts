@@ -82,20 +82,20 @@ export async function generarPdf(
   doc.setTextColor(100);
   doc.text(subtitulo, 14, 25);
 
+  // Sin "Cargado por" (AGREGADO 2026-10-01): el PDF es para presentar
+  // (ej. a un personal o a un tercero), no un registro de auditoría interno
+  // — quién cargó cada novedad queda solo en el Excel y en la ficha.
   const filasMovimientos = datos.movimientos.map((m) => [
     formatearFecha(m.fecha),
     m.operarioNombre,
     m.tipoNombre,
     formatearCantidad(m.cantidad, m.tipoUnidad, m.tipoImpacto),
     m.observaciones ?? "",
-    m.cargadoPor,
   ]);
 
   autoTable(doc, {
     startY: 32,
-    head: [
-      ["Fecha", "Persona", "Tipo", "Cantidad", "Observaciones", "Cargado por"],
-    ],
+    head: [["Fecha", "Persona", "Tipo", "Cantidad", "Observaciones"]],
     body: filasMovimientos,
     styles: { fontSize: 8 },
     headStyles: { fillColor: [31, 77, 76] },
