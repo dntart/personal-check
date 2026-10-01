@@ -221,7 +221,7 @@ export async function obtenerUltimasNovedades(limite = 8) {
   const { data } = await supabase
     .from("movimientos")
     .select(
-      "id, fecha, observaciones, operarios(nombre), tipos_movimiento(nombre), admins(nombre)",
+      "id, fecha, observaciones, operarios(nombre), tipos_movimiento(nombre), admins!movimientos_admin_id_fkey(nombre)",
     )
     .is("deleted_at", null)
     .order("created_at", { ascending: false })

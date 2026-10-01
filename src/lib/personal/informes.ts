@@ -139,7 +139,7 @@ export async function obtenerInforme(
   let queryDelMes = supabase
     .from("movimientos")
     .select(
-      "id, operario_id, fecha, cantidad, observaciones, operarios(nombre), tipos_movimiento(codigo, nombre, impacto, unidad), admins(nombre)",
+      "id, operario_id, fecha, cantidad, observaciones, operarios(nombre), tipos_movimiento(codigo, nombre, impacto, unidad), admins!movimientos_admin_id_fkey(nombre)",
     )
     .is("deleted_at", null)
     .gte("fecha", desde)
