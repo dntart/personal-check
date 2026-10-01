@@ -378,7 +378,7 @@ export async function obtenerFichaPersonal(operarioId: string) {
     supabase
       .from("movimientos")
       .select(
-        "id, fecha, cantidad, observaciones, adjunto_url, tipo_movimiento_id, tipos_movimiento(codigo, nombre, impacto, unidad), admins(nombre)",
+        "id, fecha, cantidad, observaciones, adjunto_url, tipo_movimiento_id, admin_id, motivo_edicion, tipos_movimiento(codigo, nombre, impacto, unidad), admins!movimientos_admin_id_fkey(nombre), editor:admins!movimientos_editado_por_fkey(nombre)",
       )
       .eq("operario_id", operarioId)
       .is("deleted_at", null)

@@ -16,11 +16,12 @@ export type EstadoEliminarNovedad = { error: string } | null;
  * absoluto (se cargó para la persona equivocada, está duplicada, etc.).
  *
  * Soft delete, motivo obligatorio, queda en Auditoría — mismo criterio que
- * "Eliminar personal". Y, mismo criterio también: solo el Admin de
- * Organización puede hacerlo, no un Supervisor — borrar es más
- * definitivo que corregir, así que queda con el mismo nivel de permiso
- * restringido que "Eliminar personal" (2026-09-18), no el de "Corregir"
- * (abierto a Supervisor también).
+ * "Eliminar personal".
+ *
+ * CORREGIDO 2026-10-01 (a pedido explícito de Dante): un Supervisor puede
+ * eliminar sus PROPIAS novedades, pero no las de un compañero supervisor —
+ * "el único con la potestad de hacer eso debe ser el administrador". El
+ * Admin de organización puede eliminar cualquiera.
  */
 export async function eliminarNovedad(
   operarioId: string,
@@ -28,10 +29,8 @@ export async function eliminarNovedad(
   formData: FormData,
 ): Promise<EstadoEliminarNovedad> {
   const sesion = await obtenerSesion();
-  if (!sesion || sesion.tipo !== "admin" || sesion.rol !== "admin") {
-    return {
-      error: "Solo un Admin de organización puede eliminar una novedad.",
-    };
+  if (!sesion || sesion.tipo !== "admin") {
+    return { error: "No tenés permiso para hacer esto." };
   }
 
   const parsed = eliminarNovedadSchema.safeParse({
@@ -47,7 +46,7 @@ export async function eliminarNovedad(
   const { data: movimiento } = await supabase
     .from("movimientos")
     .select(
-      "id, fecha, cantidad, observaciones, tipo_movimiento_id, operario_id, tipos_movimiento(nombre)",
+      "id, fecha, cantidad, observaciones, tipo_movimiento_id, operario_id, admin_id, tipos_movimiento(nombre)",
     )
     .eq("id", parsed.data.movimientoId)
     .eq("operario_id", operarioId)
@@ -55,6 +54,12 @@ export async function eliminarNovedad(
     .maybeSingle();
 
   if (!movimiento) return { error: "No se encontró esa novedad." };
+
+  if (sesion.rol !== "admin" && movimiento.admin_id !== sesion.id) {
+    return {
+      error: "No podés eliminar una novedad cargada por otro supervisor.",
+    };
+  }
 
   const { error } = await supabase
     .from("movimientos")

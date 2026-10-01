@@ -16,15 +16,18 @@ export type EstadoEditarNovedad = { error: string } | null;
 /**
  * Editar una novedad ya cargada (a pedido explícito de Dante, 2026-09-18):
  * antes solo se podía cargar, no corregir un error de carga sin eliminar el
- * personal entero o dejar el dato mal para siempre. Mismo nivel de permiso
- * que cargar novedad (admin de organización o supervisor, no está
- * restringido como "Eliminar personal") — el supervisor es quien más carga
- * novedades día a día, tiene sentido que también pueda corregir sus propios
- * errores de tipeo.
+ * personal entero o dejar el dato mal para siempre.
  *
- * Pide un motivo (no se guarda en el movimiento en sí, solo en la
- * auditoría) para dejar rastro de qué se corrigió y por qué — mismo
- * criterio que "Eliminar personal".
+ * CORREGIDO 2026-10-01 (a pedido explícito de Dante, tras ver que un
+ * supervisor corrigió sin que quedara a la vista un movimiento cargado por
+ * otro supervisor): un Supervisor puede corregir sus PROPIAS novedades
+ * (las que él mismo cargó), pero no las de un compañero supervisor — "el
+ * único con la potestad de hacer eso debe ser el administrador". El Admin
+ * de organización puede corregir cualquiera, sin esa restricción.
+ *
+ * El motivo ahora queda en dos lugares: en Auditoría (como antes) y en el
+ * propio movimiento (`editado_por`/`motivo_edicion`), para que se vea la
+ * marca de "editada" directamente en la ficha sin tener que ir a buscarla.
  */
 export async function editarNovedad(
   operarioId: string,
@@ -54,7 +57,7 @@ export async function editarNovedad(
   const { data: anterior } = await supabase
     .from("movimientos")
     .select(
-      "id, operario_id, tipo_movimiento_id, fecha, cantidad, observaciones, adjunto_url",
+      "id, operario_id, admin_id, tipo_movimiento_id, fecha, cantidad, observaciones, adjunto_url",
     )
     .eq("id", movimientoId)
     .eq("operario_id", operarioId)
@@ -62,6 +65,12 @@ export async function editarNovedad(
     .maybeSingle();
 
   if (!anterior) return { error: "No se encontró esa novedad." };
+
+  if (sesion.rol !== "admin" && anterior.admin_id !== sesion.id) {
+    return {
+      error: "No podés corregir una novedad cargada por otro supervisor.",
+    };
+  }
 
   const { data: tipo } = await supabase
     .from("tipos_movimiento")
@@ -91,6 +100,8 @@ export async function editarNovedad(
       observaciones: parsed.data.observaciones ?? null,
       adjunto_url: adjuntoUrl,
       updated_at: new Date().toISOString(),
+      editado_por: sesion.id,
+      motivo_edicion: parsed.data.motivo,
     })
     .eq("id", movimientoId);
 

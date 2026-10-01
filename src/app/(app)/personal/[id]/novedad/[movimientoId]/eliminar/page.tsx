@@ -13,16 +13,14 @@ export default async function EliminarNovedadPage({
   const { id, movimientoId } = await params;
   const sesion = await obtenerSesion();
   if (!sesion) redirect("/login");
-  // Solo el Admin de Organización puede eliminar una novedad, no un
-  // Supervisor — mismo criterio que "Eliminar personal" (2026-09-18).
-  if (sesion.tipo !== "admin" || sesion.rol !== "admin") redirect("/");
+  if (sesion.tipo !== "admin") redirect("/");
 
   const supabase = await createClient();
   const [{ data: operario }, { data: movimiento }] = await Promise.all([
     supabase.from("operarios").select("id, nombre").eq("id", id).maybeSingle(),
     supabase
       .from("movimientos")
-      .select("id, fecha, tipos_movimiento(nombre)")
+      .select("id, admin_id, fecha, tipos_movimiento(nombre)")
       .eq("id", movimientoId)
       .eq("operario_id", id)
       .is("deleted_at", null)
@@ -30,6 +28,13 @@ export default async function EliminarNovedadPage({
   ]);
 
   if (!operario || !movimiento) notFound();
+
+  // CORREGIDO 2026-10-01: un Supervisor solo puede eliminar sus propias
+  // novedades, no las de un compañero — "el único con la potestad de [tocar
+  // la de otro] debe ser el administrador" (ver actions.ts de esta ruta).
+  if (sesion.rol !== "admin" && movimiento.admin_id !== sesion.id) {
+    redirect(`/personal/${id}`);
+  }
 
   const tipo = movimiento.tipos_movimiento as unknown as {
     nombre: string;

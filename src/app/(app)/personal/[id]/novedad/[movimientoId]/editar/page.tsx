@@ -21,7 +21,7 @@ export default async function EditarNovedadPage({
     supabase
       .from("movimientos")
       .select(
-        "id, tipo_movimiento_id, fecha, cantidad, observaciones, adjunto_url",
+        "id, admin_id, tipo_movimiento_id, fecha, cantidad, observaciones, adjunto_url",
       )
       .eq("id", movimientoId)
       .eq("operario_id", id)
@@ -31,6 +31,12 @@ export default async function EditarNovedadPage({
   ]);
 
   if (!operario || !movimiento) notFound();
+
+  // CORREGIDO 2026-10-01: un Supervisor solo puede corregir sus propias
+  // novedades, no las de un compañero (ver actions.ts de esta misma ruta).
+  if (sesion.rol !== "admin" && movimiento.admin_id !== sesion.id) {
+    redirect(`/personal/${id}`);
+  }
 
   return (
     <div className="mx-auto flex w-full max-w-lg flex-1 flex-col p-6">

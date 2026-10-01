@@ -64,6 +64,11 @@ proyecto compartido del portfolio):
     bloques de 30, neutra)
 15. `20260922_personalcheck_licencia_extraordinaria.sql` — agrega Licencia
     Extraordinaria (mismo tratamiento que Licencia Anual Ordinaria)
+16. `20261001_personalcheck_editar_novedad_solo_admin.sql` — agrega
+    `editado_por`/`motivo_edicion` a `movimientos`, para marcar en la ficha
+    cuándo una novedad fue corregida y por qué (el permiso en sí — un
+    Supervisor solo puede corregir/eliminar sus propias novedades, no las de
+    un compañero — se restringe en el código, no acá)
 
 Además, en **Project Settings > Data API**, el schema `personalcheck` y sus
 10 tablas tienen que estar tildados en "Exposed schemas" / "Exposed tables"

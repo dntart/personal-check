@@ -141,6 +141,9 @@ export default async function FichaPersonalPage({
                 impacto: "suma" | "resta" | "neutro";
               } | null;
               const admin = m.admins as unknown as { nombre: string } | null;
+              const editor = m.editor as unknown as {
+                nombre: string;
+              } | null;
               return (
                 <li
                   key={m.id}
@@ -160,6 +163,12 @@ export default async function FichaPersonalPage({
                   <p className="mt-1 text-xs opacity-60">
                     Cargado por {admin?.nombre ?? "—"}
                   </p>
+                  {editor && (
+                    <p className="mt-1 text-xs text-acento">
+                      Editada por {editor.nombre}
+                      {m.motivo_edicion ? ` — ${m.motivo_edicion}` : ""}
+                    </p>
+                  )}
                   {m.observaciones && (
                     <p className="mt-1 whitespace-pre-wrap opacity-80">
                       {m.observaciones}
@@ -175,20 +184,23 @@ export default async function FichaPersonalPage({
                       Ver adjunto
                     </a>
                   )}
-                  <Link
-                    href={`/personal/${id}/novedad/${m.id}/editar`}
-                    className="mt-1 mr-3 inline-block text-xs text-acento underline transition-opacity hover:opacity-70"
-                  >
-                    Corregir
-                  </Link>
-                  {sesion.tipo === "admin" && sesion.rol === "admin" && (
-                    <Link
-                      href={`/personal/${id}/novedad/${m.id}/eliminar`}
-                      className="mt-1 inline-block text-xs text-negativo underline transition-opacity hover:opacity-70"
-                    >
-                      Eliminar
-                    </Link>
-                  )}
+                  {sesion.tipo === "admin" &&
+                    (sesion.rol === "admin" || m.admin_id === sesion.id) && (
+                      <>
+                        <Link
+                          href={`/personal/${id}/novedad/${m.id}/editar`}
+                          className="mt-1 mr-3 inline-block text-xs text-acento underline transition-opacity hover:opacity-70"
+                        >
+                          Corregir
+                        </Link>
+                        <Link
+                          href={`/personal/${id}/novedad/${m.id}/eliminar`}
+                          className="mt-1 inline-block text-xs text-negativo underline transition-opacity hover:opacity-70"
+                        >
+                          Eliminar
+                        </Link>
+                      </>
+                    )}
                 </li>
               );
             })}

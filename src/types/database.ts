@@ -251,8 +251,10 @@ export type Database = {
           cantidad: number;
           created_at: string;
           deleted_at: string | null;
+          editado_por: string | null;
           fecha: string;
           id: string;
+          motivo_edicion: string | null;
           observaciones: string | null;
           operario_id: string;
           organizacion_id: string;
@@ -265,8 +267,10 @@ export type Database = {
           cantidad?: number;
           created_at?: string;
           deleted_at?: string | null;
+          editado_por?: string | null;
           fecha: string;
           id?: string;
+          motivo_edicion?: string | null;
           observaciones?: string | null;
           operario_id: string;
           organizacion_id: string;
@@ -279,8 +283,10 @@ export type Database = {
           cantidad?: number;
           created_at?: string;
           deleted_at?: string | null;
+          editado_por?: string | null;
           fecha?: string;
           id?: string;
+          motivo_edicion?: string | null;
           observaciones?: string | null;
           operario_id?: string;
           organizacion_id?: string;
@@ -291,6 +297,13 @@ export type Database = {
           {
             foreignKeyName: "movimientos_admin_id_fkey";
             columns: ["admin_id"];
+            isOneToOne: false;
+            referencedRelation: "admins";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "movimientos_editado_por_fkey";
+            columns: ["editado_por"];
             isOneToOne: false;
             referencedRelation: "admins";
             referencedColumns: ["id"];
