@@ -76,11 +76,22 @@ export async function generarPdf(
   const titulo = `Informe de novedades — ${datos.filtroLabel}`;
   const subtitulo = `${organizacionNombre} — ${datos.periodoLabel}`;
 
+  // Título/subtítulo envueltos en varias líneas en vez de una sola fija
+  // (CORREGIDO 2026-10-01): con varios "tipos específicos" elegidos el
+  // texto podía ser más ancho que la hoja y se cortaba/salía del margen.
+  const margenX = 14;
+  const anchoUtil = doc.internal.pageSize.getWidth() - margenX * 2;
+
   doc.setFontSize(14);
-  doc.text(titulo, 14, 18);
+  const lineasTitulo = doc.splitTextToSize(titulo, anchoUtil) as string[];
+  doc.text(lineasTitulo, margenX, 18);
+  const finTitulo = 18 + lineasTitulo.length * 6;
+
   doc.setFontSize(10);
   doc.setTextColor(100);
-  doc.text(subtitulo, 14, 25);
+  const lineasSubtitulo = doc.splitTextToSize(subtitulo, anchoUtil) as string[];
+  doc.text(lineasSubtitulo, margenX, finTitulo);
+  const inicioTabla = finTitulo + lineasSubtitulo.length * 5 + 3;
 
   // Sin "Cargado por" (AGREGADO 2026-10-01): el PDF es para presentar
   // (ej. a un personal o a un tercero), no un registro de auditoría interno
@@ -94,7 +105,7 @@ export async function generarPdf(
   ]);
 
   autoTable(doc, {
-    startY: 32,
+    startY: inicioTabla,
     head: [["Fecha", "Persona", "Tipo", "Cantidad", "Observaciones"]],
     body: filasMovimientos,
     styles: { fontSize: 8 },
@@ -104,7 +115,7 @@ export async function generarPdf(
   if (datos.resumen) {
     const finTabla =
       (doc as unknown as { lastAutoTable?: { finalY: number } }).lastAutoTable
-        ?.finalY ?? 32;
+        ?.finalY ?? inicioTabla;
 
     doc.setFontSize(12);
     doc.setTextColor(0);
