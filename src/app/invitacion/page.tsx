@@ -1,7 +1,15 @@
+import { redirect } from "next/navigation";
+import { obtenerSesion } from "@/lib/supabase/sesion";
 import { Logo } from "@/components/Logo";
 import { InvitacionForm } from "./InvitacionForm";
 
-export default function InvitacionPage() {
+export default async function InvitacionPage() {
+  // Quien ya creó su contraseña y vuelve a abrir el link del mail (ya tiene
+  // sesión activa) va directo al dashboard, no de nuevo a este panel — mismo
+  // criterio que /login.
+  const sesion = await obtenerSesion();
+  if (sesion) redirect("/");
+
   return (
     <div className="flex min-h-screen flex-1 items-center justify-center px-4">
       <div className="w-full max-w-sm rounded-sm border border-borde bg-superficie p-8">
