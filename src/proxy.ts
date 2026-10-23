@@ -15,6 +15,10 @@ export async function proxy(request: NextRequest) {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       db: { schema: "personalcheck" },
+      // Mismo nombre de cookie que los otros dos clientes (ver
+      // lib/supabase/client.ts) — si no coincide, el middleware no
+      // reconoce la sesión que el navegador ya tiene.
+      cookieOptions: { name: "sb-personalcheck-auth" },
       cookies: {
         getAll() {
           return request.cookies.getAll();

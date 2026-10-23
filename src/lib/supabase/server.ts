@@ -17,6 +17,10 @@ export async function createClient() {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       db: { schema: "personalcheck" },
+      // Mismo nombre de cookie que el cliente de navegador y el middleware
+      // (ver client.ts) — los tres tienen que coincidir o la sesión no se
+      // reconoce entre uno y otro.
+      cookieOptions: { name: "sb-personalcheck-auth" },
       cookies: {
         getAll() {
           return cookieStore.getAll();

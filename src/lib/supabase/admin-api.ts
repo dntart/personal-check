@@ -1,4 +1,5 @@
 import "server-only";
+import { getSiteUrl } from "@/lib/site-url";
 
 // Llama a la Auth Admin API (GoTrue) directo por fetch, en vez del SDK
 // completo de supabase-js: ese SDK inicializa un cliente Realtime que
@@ -32,7 +33,7 @@ type ResultadoInvitacion =
 export async function invitarOEncontrarUsuario(
   email: string,
 ): Promise<ResultadoInvitacion> {
-  const sitio = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+  const sitio = getSiteUrl();
   const redirectTo = `${sitio}/invitacion`;
 
   const invite = await fetch(
@@ -103,7 +104,7 @@ export async function invitarOEncontrarUsuario(
 export async function generarLinkInvitacion(
   email: string,
 ): Promise<{ link: string } | { error: string }> {
-  const sitio = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+  const sitio = getSiteUrl();
   const redirectTo = `${sitio}/invitacion`;
 
   const lista = await fetch(`${url}/auth/v1/admin/users?per_page=1000`, {

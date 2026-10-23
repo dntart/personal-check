@@ -69,6 +69,15 @@ proyecto compartido del portfolio):
     cuándo una novedad fue corregida y por qué (el permiso en sí — un
     Supervisor solo puede corregir/eliminar sus propias novedades, no las de
     un compañero — se restringe en el código, no acá)
+17. `20261008_personalcheck_rls_por_operacion.sql` — reemplaza las policies
+    `FOR ALL` sin `WITH CHECK` de `admins`, `organizaciones` y `movimientos`
+    por una policy por operación, con el mismo permiso que ya tenía el
+    código (cierra una escalada real: un Supervisor podía, vía API directa,
+    cambiar su propio rol a admin o tocar la novedad de un compañero)
+18. `20261022_personalcheck_operarios_trigger_eliminacion.sql` — trigger que
+    bloquea el soft-delete de `operarios` (`deleted_at`) a quien no sea
+    Admin, espejo a nivel de base del mismo permiso que ya tenía
+    "Eliminar personal" en el código
 
 Además, en **Project Settings > Data API**, el schema `personalcheck` y sus
 10 tablas tienen que estar tildados en "Exposed schemas" / "Exposed tables"
