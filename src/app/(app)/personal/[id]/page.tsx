@@ -8,6 +8,7 @@ import {
   formatearFecha,
   formatearMinutosComoHoras,
 } from "@/lib/personal/reglas";
+import { formatearCantidad } from "@/lib/personal/generar-informe";
 
 export default async function FichaPersonalPage({
   params,
@@ -156,8 +157,8 @@ export default async function FichaPersonalPage({
                     </span>
                   </div>
                   <p className="mt-1 font-mono">
-                    {tipo?.unidad === "minutos"
-                      ? formatearMinutosComoHoras(m.cantidad)
+                    {tipo
+                      ? formatearCantidad(m.cantidad, tipo.unidad, tipo.impacto)
                       : `${m.cantidad} días`}
                   </p>
                   <p className="mt-1 text-xs opacity-60">
